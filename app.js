@@ -1,3 +1,4918 @@
+(function (exports) {
+    'use strict';
+
+    /******************************************************************************
+    Copyright (c) Microsoft Corporation.
+
+    Permission to use, copy, modify, and/or distribute this software for any
+    purpose with or without fee is hereby granted.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+    ***************************************************************************** */
+
+    function __awaiter(thisArg, _arguments, P, generator) {
+        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+        return new (P || (P = Promise))(function (resolve, reject) {
+            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+            step((generator = generator.apply(thisArg, _arguments || [])).next());
+        });
+    }
+
+    function __classPrivateFieldGet(receiver, state, kind, f) {
+        if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+        if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+        return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+    }
+
+    /**
+     * Helper class to generate query strings.
+     */
+    class Query {
+        /**
+         * Constructor for Query class.
+         *
+         * @param {string} method
+         * @param {AttributesTypes} attribute
+         * @param {QueryTypes} values
+         */
+        constructor(method, attribute, values) {
+            this.method = method;
+            this.attribute = attribute;
+            if (values !== undefined) {
+                if (Array.isArray(values)) {
+                    this.values = values;
+                }
+                else {
+                    this.values = [values];
+                }
+            }
+        }
+        /**
+         * Convert the query object to a JSON string.
+         *
+         * @returns {string}
+         */
+        toString() {
+            return JSON.stringify({
+                method: this.method,
+                attribute: this.attribute,
+                values: this.values,
+            });
+        }
+    }
+    /**
+     * Filter resources where attribute is equal to value.
+     *
+     * @param {string} attribute
+     * @param {QueryTypes} value
+     * @returns {string}
+     */
+    Query.equal = (attribute, value) => new Query("equal", attribute, value).toString();
+    /**
+     * Filter resources where attribute is not equal to value.
+     *
+     * @param {string} attribute
+     * @param {QueryTypes} value
+     * @returns {string}
+     */
+    Query.notEqual = (attribute, value) => new Query("notEqual", attribute, value).toString();
+    /**
+     * Filter resources where attribute is less than value.
+     *
+     * @param {string} attribute
+     * @param {QueryTypes} value
+     * @returns {string}
+     */
+    Query.lessThan = (attribute, value) => new Query("lessThan", attribute, value).toString();
+    /**
+     * Filter resources where attribute is less than or equal to value.
+     *
+     * @param {string} attribute
+     * @param {QueryTypes} value
+     * @returns {string}
+     */
+    Query.lessThanEqual = (attribute, value) => new Query("lessThanEqual", attribute, value).toString();
+    /**
+     * Filter resources where attribute is greater than value.
+     *
+     * @param {string} attribute
+     * @param {QueryTypes} value
+     * @returns {string}
+     */
+    Query.greaterThan = (attribute, value) => new Query("greaterThan", attribute, value).toString();
+    /**
+     * Filter resources where attribute is greater than or equal to value.
+     *
+     * @param {string} attribute
+     * @param {QueryTypes} value
+     * @returns {string}
+     */
+    Query.greaterThanEqual = (attribute, value) => new Query("greaterThanEqual", attribute, value).toString();
+    /**
+     * Filter resources where attribute is null.
+     *
+     * @param {string} attribute
+     * @returns {string}
+     */
+    Query.isNull = (attribute) => new Query("isNull", attribute).toString();
+    /**
+     * Filter resources where attribute is not null.
+     *
+     * @param {string} attribute
+     * @returns {string}
+     */
+    Query.isNotNull = (attribute) => new Query("isNotNull", attribute).toString();
+    /**
+     * Filter resources where attribute is between start and end (inclusive).
+     *
+     * @param {string} attribute
+     * @param {string | number} start
+     * @param {string | number} end
+     * @returns {string}
+     */
+    Query.between = (attribute, start, end) => new Query("between", attribute, [start, end]).toString();
+    /**
+     * Filter resources where attribute starts with value.
+     *
+     * @param {string} attribute
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.startsWith = (attribute, value) => new Query("startsWith", attribute, value).toString();
+    /**
+     * Filter resources where attribute ends with value.
+     *
+     * @param {string} attribute
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.endsWith = (attribute, value) => new Query("endsWith", attribute, value).toString();
+    /**
+     * Specify which attributes should be returned by the API call.
+     *
+     * @param {string[]} attributes
+     * @returns {string}
+     */
+    Query.select = (attributes) => new Query("select", undefined, attributes).toString();
+    /**
+     * Filter resources by searching attribute for value.
+     * A fulltext index on attribute is required for this query to work.
+     *
+     * @param {string} attribute
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.search = (attribute, value) => new Query("search", attribute, value).toString();
+    /**
+     * Sort results by attribute descending.
+     *
+     * @param {string} attribute
+     * @returns {string}
+     */
+    Query.orderDesc = (attribute) => new Query("orderDesc", attribute).toString();
+    /**
+     * Sort results by attribute ascending.
+     *
+     * @param {string} attribute
+     * @returns {string}
+     */
+    Query.orderAsc = (attribute) => new Query("orderAsc", attribute).toString();
+    /**
+     * Sort results randomly.
+     *
+     * @returns {string}
+     */
+    Query.orderRandom = () => new Query("orderRandom").toString();
+    /**
+     * Return results after documentId.
+     *
+     * @param {string} documentId
+     * @returns {string}
+     */
+    Query.cursorAfter = (documentId) => new Query("cursorAfter", undefined, documentId).toString();
+    /**
+     * Return results before documentId.
+     *
+     * @param {string} documentId
+     * @returns {string}
+     */
+    Query.cursorBefore = (documentId) => new Query("cursorBefore", undefined, documentId).toString();
+    /**
+     * Return only limit results.
+     *
+     * @param {number} limit
+     * @returns {string}
+     */
+    Query.limit = (limit) => new Query("limit", undefined, limit).toString();
+    /**
+     * Filter resources by skipping the first offset results.
+     *
+     * @param {number} offset
+     * @returns {string}
+     */
+    Query.offset = (offset) => new Query("offset", undefined, offset).toString();
+    /**
+     * Filter resources where attribute contains the specified value.
+     *
+     * @param {string} attribute
+     * @param {string | string[]} value
+     * @returns {string}
+     */
+    Query.contains = (attribute, value) => new Query("contains", attribute, value).toString();
+    /**
+     * Filter resources where attribute does not contain the specified value.
+     *
+     * @param {string} attribute
+     * @param {string | any[]} value
+     * @returns {string}
+     */
+    Query.notContains = (attribute, value) => new Query("notContains", attribute, value).toString();
+    /**
+     * Filter resources by searching attribute for value (inverse of search).
+     * A fulltext index on attribute is required for this query to work.
+     *
+     * @param {string} attribute
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.notSearch = (attribute, value) => new Query("notSearch", attribute, value).toString();
+    /**
+     * Filter resources where attribute is not between start and end (exclusive).
+     *
+     * @param {string} attribute
+     * @param {string | number} start
+     * @param {string | number} end
+     * @returns {string}
+     */
+    Query.notBetween = (attribute, start, end) => new Query("notBetween", attribute, [start, end]).toString();
+    /**
+     * Filter resources where attribute does not start with value.
+     *
+     * @param {string} attribute
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.notStartsWith = (attribute, value) => new Query("notStartsWith", attribute, value).toString();
+    /**
+     * Filter resources where attribute does not end with value.
+     *
+     * @param {string} attribute
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.notEndsWith = (attribute, value) => new Query("notEndsWith", attribute, value).toString();
+    /**
+     * Filter resources where document was created before date.
+     *
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.createdBefore = (value) => new Query("createdBefore", undefined, value).toString();
+    /**
+     * Filter resources where document was created after date.
+     *
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.createdAfter = (value) => new Query("createdAfter", undefined, value).toString();
+    /**
+     * Filter resources where document was created between dates.
+     *
+     * @param {string} start
+     * @param {string} end
+     * @returns {string}
+     */
+    Query.createdBetween = (start, end) => new Query("createdBetween", undefined, [start, end]).toString();
+    /**
+     * Filter resources where document was updated before date.
+     *
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.updatedBefore = (value) => new Query("updatedBefore", undefined, value).toString();
+    /**
+     * Filter resources where document was updated after date.
+     *
+     * @param {string} value
+     * @returns {string}
+     */
+    Query.updatedAfter = (value) => new Query("updatedAfter", undefined, value).toString();
+    /**
+     * Filter resources where document was updated between dates.
+     *
+     * @param {string} start
+     * @param {string} end
+     * @returns {string}
+     */
+    Query.updatedBetween = (start, end) => new Query("updatedBetween", undefined, [start, end]).toString();
+    /**
+     * Combine multiple queries using logical OR operator.
+     *
+     * @param {string[]} queries
+     * @returns {string}
+     */
+    Query.or = (queries) => new Query("or", undefined, queries.map((query) => JSON.parse(query))).toString();
+    /**
+     * Combine multiple queries using logical AND operator.
+     *
+     * @param {string[]} queries
+     * @returns {string}
+     */
+    Query.and = (queries) => new Query("and", undefined, queries.map((query) => JSON.parse(query))).toString();
+    /**
+     * Filter resources where attribute is at a specific distance from the given coordinates.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @param {number} distance
+     * @param {boolean} meters
+     * @returns {string}
+     */
+    Query.distanceEqual = (attribute, values, distance, meters = true) => new Query("distanceEqual", attribute, [[values, distance, meters]]).toString();
+    /**
+     * Filter resources where attribute is not at a specific distance from the given coordinates.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @param {number} distance
+     * @param {boolean} meters
+     * @returns {string}
+     */
+    Query.distanceNotEqual = (attribute, values, distance, meters = true) => new Query("distanceNotEqual", attribute, [[values, distance, meters]]).toString();
+    /**
+     * Filter resources where attribute is at a distance greater than the specified value from the given coordinates.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @param {number} distance
+     * @param {boolean} meters
+     * @returns {string}
+     */
+    Query.distanceGreaterThan = (attribute, values, distance, meters = true) => new Query("distanceGreaterThan", attribute, [[values, distance, meters]]).toString();
+    /**
+     * Filter resources where attribute is at a distance less than the specified value from the given coordinates.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @param {number} distance
+     * @param {boolean} meters
+     * @returns {string}
+     */
+    Query.distanceLessThan = (attribute, values, distance, meters = true) => new Query("distanceLessThan", attribute, [[values, distance, meters]]).toString();
+    /**
+     * Filter resources where attribute intersects with the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.intersects = (attribute, values) => new Query("intersects", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute does not intersect with the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.notIntersects = (attribute, values) => new Query("notIntersects", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute crosses the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.crosses = (attribute, values) => new Query("crosses", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute does not cross the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.notCrosses = (attribute, values) => new Query("notCrosses", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute overlaps with the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.overlaps = (attribute, values) => new Query("overlaps", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute does not overlap with the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.notOverlaps = (attribute, values) => new Query("notOverlaps", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute touches the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.touches = (attribute, values) => new Query("touches", attribute, [values]).toString();
+    /**
+     * Filter resources where attribute does not touch the given geometry.
+     *
+     * @param {string} attribute
+     * @param {any[]} values
+     * @returns {string}
+     */
+    Query.notTouches = (attribute, values) => new Query("notTouches", attribute, [values]).toString();
+
+    /**
+     * Exception thrown by the  package
+     */
+    class AppwriteException extends Error {
+        /**
+         * Initializes a Appwrite Exception.
+         *
+         * @param {string} message - The error message.
+         * @param {number} code - The error code. Default is 0.
+         * @param {string} type - The error type. Default is an empty string.
+         * @param {string} response - The response string. Default is an empty string.
+         */
+        constructor(message, code = 0, type = '', response = '') {
+            super(message);
+            this.name = 'AppwriteException';
+            this.message = message;
+            this.code = code;
+            this.type = type;
+            this.response = response;
+        }
+    }
+    /**
+     * Client that handles requests to Appwrite
+     */
+    class Client {
+        constructor() {
+            /**
+             * Holds configuration such as project.
+             */
+            this.config = {
+                endpoint: 'https://cloud.appwrite.io/v1',
+                endpointRealtime: '',
+                project: '',
+                jwt: '',
+                locale: '',
+                session: '',
+                devkey: '',
+            };
+            /**
+             * Custom headers for API requests.
+             */
+            this.headers = {
+                'x-sdk-name': 'Web',
+                'x-sdk-platform': 'client',
+                'x-sdk-language': 'web',
+                'x-sdk-version': '21.0.0',
+                'X-Appwrite-Response-Format': '1.8.0',
+            };
+            this.realtime = {
+                socket: undefined,
+                timeout: undefined,
+                heartbeat: undefined,
+                url: '',
+                channels: new Set(),
+                subscriptions: new Map(),
+                subscriptionsCounter: 0,
+                reconnect: true,
+                reconnectAttempts: 0,
+                lastMessage: undefined,
+                connect: () => {
+                    clearTimeout(this.realtime.timeout);
+                    this.realtime.timeout = window === null || window === void 0 ? void 0 : window.setTimeout(() => {
+                        this.realtime.createSocket();
+                    }, 50);
+                },
+                getTimeout: () => {
+                    switch (true) {
+                        case this.realtime.reconnectAttempts < 5:
+                            return 1000;
+                        case this.realtime.reconnectAttempts < 15:
+                            return 5000;
+                        case this.realtime.reconnectAttempts < 100:
+                            return 10000;
+                        default:
+                            return 60000;
+                    }
+                },
+                createHeartbeat: () => {
+                    if (this.realtime.heartbeat) {
+                        clearTimeout(this.realtime.heartbeat);
+                    }
+                    this.realtime.heartbeat = window === null || window === void 0 ? void 0 : window.setInterval(() => {
+                        var _a;
+                        (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.send(JSON.stringify({
+                            type: 'ping'
+                        }));
+                    }, 20000);
+                },
+                createSocket: () => {
+                    var _a, _b, _c;
+                    if (this.realtime.channels.size < 1) {
+                        this.realtime.reconnect = false;
+                        (_a = this.realtime.socket) === null || _a === void 0 ? void 0 : _a.close();
+                        return;
+                    }
+                    const channels = new URLSearchParams();
+                    channels.set('project', this.config.project);
+                    this.realtime.channels.forEach(channel => {
+                        channels.append('channels[]', channel);
+                    });
+                    const url = this.config.endpointRealtime + '/realtime?' + channels.toString();
+                    if (url !== this.realtime.url || // Check if URL is present
+                        !this.realtime.socket || // Check if WebSocket has not been created
+                        ((_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.readyState) > WebSocket.OPEN // Check if WebSocket is CLOSING (3) or CLOSED (4)
+                    ) {
+                        if (this.realtime.socket &&
+                            ((_c = this.realtime.socket) === null || _c === void 0 ? void 0 : _c.readyState) < WebSocket.CLOSING // Close WebSocket if it is CONNECTING (0) or OPEN (1)
+                        ) {
+                            this.realtime.reconnect = false;
+                            this.realtime.socket.close();
+                        }
+                        this.realtime.url = url;
+                        this.realtime.socket = new WebSocket(url);
+                        this.realtime.socket.addEventListener('message', this.realtime.onMessage);
+                        this.realtime.socket.addEventListener('open', _event => {
+                            this.realtime.reconnectAttempts = 0;
+                            this.realtime.createHeartbeat();
+                        });
+                        this.realtime.socket.addEventListener('close', event => {
+                            var _a, _b, _c;
+                            if (!this.realtime.reconnect ||
+                                (((_b = (_a = this.realtime) === null || _a === void 0 ? void 0 : _a.lastMessage) === null || _b === void 0 ? void 0 : _b.type) === 'error' && // Check if last message was of type error
+                                    ((_c = this.realtime) === null || _c === void 0 ? void 0 : _c.lastMessage.data).code === 1008 // Check for policy violation 1008
+                                )) {
+                                this.realtime.reconnect = true;
+                                return;
+                            }
+                            const timeout = this.realtime.getTimeout();
+                            console.error(`Realtime got disconnected. Reconnect will be attempted in ${timeout / 1000} seconds.`, event.reason);
+                            setTimeout(() => {
+                                this.realtime.reconnectAttempts++;
+                                this.realtime.createSocket();
+                            }, timeout);
+                        });
+                    }
+                },
+                onMessage: (event) => {
+                    var _a, _b;
+                    try {
+                        const message = JSON.parse(event.data);
+                        this.realtime.lastMessage = message;
+                        switch (message.type) {
+                            case 'connected':
+                                const cookie = JSON.parse((_a = window.localStorage.getItem('cookieFallback')) !== null && _a !== void 0 ? _a : '{}');
+                                const session = cookie === null || cookie === void 0 ? void 0 : cookie[`a_session_${this.config.project}`];
+                                const messageData = message.data;
+                                if (session && !messageData.user) {
+                                    (_b = this.realtime.socket) === null || _b === void 0 ? void 0 : _b.send(JSON.stringify({
+                                        type: 'authentication',
+                                        data: {
+                                            session
+                                        }
+                                    }));
+                                }
+                                break;
+                            case 'event':
+                                let data = message.data;
+                                if (data === null || data === void 0 ? void 0 : data.channels) {
+                                    const isSubscribed = data.channels.some(channel => this.realtime.channels.has(channel));
+                                    if (!isSubscribed)
+                                        return;
+                                    this.realtime.subscriptions.forEach(subscription => {
+                                        if (data.channels.some(channel => subscription.channels.includes(channel))) {
+                                            setTimeout(() => subscription.callback(data));
+                                        }
+                                    });
+                                }
+                                break;
+                            case 'pong':
+                                break; // Handle pong response if needed
+                            case 'error':
+                                throw message.data;
+                            default:
+                                break;
+                        }
+                    }
+                    catch (e) {
+                        console.error(e);
+                    }
+                },
+                cleanUp: channels => {
+                    this.realtime.channels.forEach(channel => {
+                        if (channels.includes(channel)) {
+                            let found = Array.from(this.realtime.subscriptions).some(([_key, subscription]) => {
+                                return subscription.channels.includes(channel);
+                            });
+                            if (!found) {
+                                this.realtime.channels.delete(channel);
+                            }
+                        }
+                    });
+                }
+            };
+        }
+        /**
+         * Set Endpoint
+         *
+         * Your project endpoint
+         *
+         * @param {string} endpoint
+         *
+         * @returns {this}
+         */
+        setEndpoint(endpoint) {
+            if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
+                throw new AppwriteException('Invalid endpoint URL: ' + endpoint);
+            }
+            this.config.endpoint = endpoint;
+            this.config.endpointRealtime = endpoint.replace('https://', 'wss://').replace('http://', 'ws://');
+            return this;
+        }
+        /**
+         * Set Realtime Endpoint
+         *
+         * @param {string} endpointRealtime
+         *
+         * @returns {this}
+         */
+        setEndpointRealtime(endpointRealtime) {
+            if (!endpointRealtime.startsWith('ws://') && !endpointRealtime.startsWith('wss://')) {
+                throw new AppwriteException('Invalid realtime endpoint URL: ' + endpointRealtime);
+            }
+            this.config.endpointRealtime = endpointRealtime;
+            return this;
+        }
+        /**
+         * Set Project
+         *
+         * Your project ID
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setProject(value) {
+            this.headers['X-Appwrite-Project'] = value;
+            this.config.project = value;
+            return this;
+        }
+        /**
+         * Set JWT
+         *
+         * Your secret JSON Web Token
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setJWT(value) {
+            this.headers['X-Appwrite-JWT'] = value;
+            this.config.jwt = value;
+            return this;
+        }
+        /**
+         * Set Locale
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setLocale(value) {
+            this.headers['X-Appwrite-Locale'] = value;
+            this.config.locale = value;
+            return this;
+        }
+        /**
+         * Set Session
+         *
+         * The user session to authenticate with
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setSession(value) {
+            this.headers['X-Appwrite-Session'] = value;
+            this.config.session = value;
+            return this;
+        }
+        /**
+         * Set DevKey
+         *
+         * Your secret dev API key
+         *
+         * @param value string
+         *
+         * @return {this}
+         */
+        setDevKey(value) {
+            this.headers['X-Appwrite-Dev-Key'] = value;
+            this.config.devkey = value;
+            return this;
+        }
+        /**
+         * Subscribes to Appwrite events and passes you the payload in realtime.
+         *
+         * @param {string|string[]} channels
+         * Channel to subscribe - pass a single channel as a string or multiple with an array of strings.
+         *
+         * Possible channels are:
+         * - account
+         * - collections
+         * - collections.[ID]
+         * - collections.[ID].documents
+         * - documents
+         * - documents.[ID]
+         * - files
+         * - files.[ID]
+         * - executions
+         * - executions.[ID]
+         * - functions.[ID]
+         * - teams
+         * - teams.[ID]
+         * - memberships
+         * - memberships.[ID]
+         * @param {(payload: RealtimeMessage) => void} callback Is called on every realtime update.
+         * @returns {() => void} Unsubscribes from events.
+         */
+        subscribe(channels, callback) {
+            let channelArray = typeof channels === 'string' ? [channels] : channels;
+            channelArray.forEach(channel => this.realtime.channels.add(channel));
+            const counter = this.realtime.subscriptionsCounter++;
+            this.realtime.subscriptions.set(counter, {
+                channels: channelArray,
+                callback
+            });
+            this.realtime.connect();
+            return () => {
+                this.realtime.subscriptions.delete(counter);
+                this.realtime.cleanUp(channelArray);
+                this.realtime.connect();
+            };
+        }
+        prepareRequest(method, url, headers = {}, params = {}) {
+            method = method.toUpperCase();
+            headers = Object.assign({}, this.headers, headers);
+            if (typeof window !== 'undefined' && window.localStorage) {
+                const cookieFallback = window.localStorage.getItem('cookieFallback');
+                if (cookieFallback) {
+                    headers['X-Fallback-Cookies'] = cookieFallback;
+                }
+            }
+            let options = {
+                method,
+                headers,
+            };
+            if (headers['X-Appwrite-Dev-Key'] === undefined) {
+                options.credentials = 'include';
+            }
+            if (method === 'GET') {
+                for (const [key, value] of Object.entries(Client.flatten(params))) {
+                    url.searchParams.append(key, value);
+                }
+            }
+            else {
+                switch (headers['content-type']) {
+                    case 'application/json':
+                        options.body = JSON.stringify(params);
+                        break;
+                    case 'multipart/form-data':
+                        const formData = new FormData();
+                        for (const [key, value] of Object.entries(params)) {
+                            if (value instanceof File) {
+                                formData.append(key, value, value.name);
+                            }
+                            else if (Array.isArray(value)) {
+                                for (const nestedValue of value) {
+                                    formData.append(`${key}[]`, nestedValue);
+                                }
+                            }
+                            else {
+                                formData.append(key, value);
+                            }
+                        }
+                        options.body = formData;
+                        delete headers['content-type'];
+                        break;
+                }
+            }
+            return { uri: url.toString(), options };
+        }
+        chunkedUpload(method, url, headers = {}, originalPayload = {}, onProgress) {
+            var _a;
+            return __awaiter(this, void 0, void 0, function* () {
+                const [fileParam, file] = (_a = Object.entries(originalPayload).find(([_, value]) => value instanceof File)) !== null && _a !== void 0 ? _a : [];
+                if (!file || !fileParam) {
+                    throw new Error('File not found in payload');
+                }
+                if (file.size <= Client.CHUNK_SIZE) {
+                    return yield this.call(method, url, headers, originalPayload);
+                }
+                let start = 0;
+                let response = null;
+                while (start < file.size) {
+                    let end = start + Client.CHUNK_SIZE; // Prepare end for the next chunk
+                    if (end >= file.size) {
+                        end = file.size; // Adjust for the last chunk to include the last byte
+                    }
+                    headers['content-range'] = `bytes ${start}-${end - 1}/${file.size}`;
+                    const chunk = file.slice(start, end);
+                    let payload = Object.assign({}, originalPayload);
+                    payload[fileParam] = new File([chunk], file.name);
+                    response = yield this.call(method, url, headers, payload);
+                    if (onProgress && typeof onProgress === 'function') {
+                        onProgress({
+                            $id: response.$id,
+                            progress: Math.round((end / file.size) * 100),
+                            sizeUploaded: end,
+                            chunksTotal: Math.ceil(file.size / Client.CHUNK_SIZE),
+                            chunksUploaded: Math.ceil(end / Client.CHUNK_SIZE)
+                        });
+                    }
+                    if (response && response.$id) {
+                        headers['x-appwrite-id'] = response.$id;
+                    }
+                    start = end;
+                }
+                return response;
+            });
+        }
+        ping() {
+            return __awaiter(this, void 0, void 0, function* () {
+                return this.call('GET', new URL(this.config.endpoint + '/ping'));
+            });
+        }
+        call(method, url, headers = {}, params = {}, responseType = 'json') {
+            var _a, _b;
+            return __awaiter(this, void 0, void 0, function* () {
+                const { uri, options } = this.prepareRequest(method, url, headers, params);
+                let data = null;
+                const response = yield fetch(uri, options);
+                // type opaque: No-CORS, different-origin response (CORS-issue)
+                if (response.type === 'opaque') {
+                    throw new AppwriteException(`Invalid Origin. Register your new client (${window.location.host}) as a new Web platform on your project console dashboard`, 403, "forbidden", "");
+                }
+                const warnings = response.headers.get('x-appwrite-warning');
+                if (warnings) {
+                    warnings.split(';').forEach((warning) => console.warn('Warning: ' + warning));
+                }
+                if ((_a = response.headers.get('content-type')) === null || _a === void 0 ? void 0 : _a.includes('application/json')) {
+                    data = yield response.json();
+                }
+                else if (responseType === 'arrayBuffer') {
+                    data = yield response.arrayBuffer();
+                }
+                else {
+                    data = {
+                        message: yield response.text()
+                    };
+                }
+                if (400 <= response.status) {
+                    let responseText = '';
+                    if (((_b = response.headers.get('content-type')) === null || _b === void 0 ? void 0 : _b.includes('application/json')) || responseType === 'arrayBuffer') {
+                        responseText = JSON.stringify(data);
+                    }
+                    else {
+                        responseText = data === null || data === void 0 ? void 0 : data.message;
+                    }
+                    throw new AppwriteException(data === null || data === void 0 ? void 0 : data.message, response.status, data === null || data === void 0 ? void 0 : data.type, responseText);
+                }
+                const cookieFallback = response.headers.get('X-Fallback-Cookies');
+                if (typeof window !== 'undefined' && window.localStorage && cookieFallback) {
+                    window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
+                    window.localStorage.setItem('cookieFallback', cookieFallback);
+                }
+                return data;
+            });
+        }
+        static flatten(data, prefix = '') {
+            let output = {};
+            for (const [key, value] of Object.entries(data)) {
+                let finalKey = prefix ? prefix + '[' + key + ']' : key;
+                if (Array.isArray(value)) {
+                    output = Object.assign(Object.assign({}, output), Client.flatten(value, finalKey));
+                }
+                else {
+                    output[finalKey] = value;
+                }
+            }
+            return output;
+        }
+    }
+    Client.CHUNK_SIZE = 1024 * 1024 * 5;
+
+    class Service {
+        constructor(client) {
+            this.client = client;
+        }
+        static flatten(data, prefix = '') {
+            let output = {};
+            for (const [key, value] of Object.entries(data)) {
+                let finalKey = prefix ? prefix + '[' + key + ']' : key;
+                if (Array.isArray(value)) {
+                    output = Object.assign(Object.assign({}, output), Service.flatten(value, finalKey));
+                }
+                else {
+                    output[finalKey] = value;
+                }
+            }
+            return output;
+        }
+    }
+    /**
+     * The size for chunked uploads in bytes.
+     */
+    Service.CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+
+    class Account {
+        constructor(client) {
+            this.client = client;
+        }
+        /**
+         * Get the currently logged in user.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.User<Preferences>>}
+         */
+        get() {
+            const apiPath = '/account';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        create(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    email: rest[0],
+                    password: rest[1],
+                    name: rest[2]
+                };
+            }
+            const userId = params.userId;
+            const email = params.email;
+            const password = params.password;
+            const name = params.name;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof email === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "email"');
+            }
+            if (typeof password === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "password"');
+            }
+            const apiPath = '/account';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof password !== 'undefined') {
+                payload['password'] = password;
+            }
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updateEmail(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    email: paramsOrFirst,
+                    password: rest[0]
+                };
+            }
+            const email = params.email;
+            const password = params.password;
+            if (typeof email === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "email"');
+            }
+            if (typeof password === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "password"');
+            }
+            const apiPath = '/account/email';
+            const payload = {};
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof password !== 'undefined') {
+                payload['password'] = password;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        listIdentities(paramsOrFirst) {
+            let params;
+            if (!paramsOrFirst || (paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    queries: paramsOrFirst
+                };
+            }
+            const queries = params.queries;
+            const apiPath = '/account/identities';
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        deleteIdentity(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    identityId: paramsOrFirst
+                };
+            }
+            const identityId = params.identityId;
+            if (typeof identityId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "identityId"');
+            }
+            const apiPath = '/account/identities/{identityId}'.replace('{identityId}', identityId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        /**
+         * Use this endpoint to create a JSON Web Token. You can use the resulting JWT to authenticate on behalf of the current user when working with the Appwrite server-side API and SDKs. The JWT secret is valid for 15 minutes from its creation and will be invalid if the user will logout in that time frame.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.Jwt>}
+         */
+        createJWT() {
+            const apiPath = '/account/jwts';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        listLogs(paramsOrFirst) {
+            let params;
+            if (!paramsOrFirst || (paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    queries: paramsOrFirst
+                };
+            }
+            const queries = params.queries;
+            const apiPath = '/account/logs';
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updateMFA(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    mfa: paramsOrFirst
+                };
+            }
+            const mfa = params.mfa;
+            if (typeof mfa === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "mfa"');
+            }
+            const apiPath = '/account/mfa';
+            const payload = {};
+            if (typeof mfa !== 'undefined') {
+                payload['mfa'] = mfa;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        createMfaAuthenticator(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'type' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    type: paramsOrFirst
+                };
+            }
+            const type = params.type;
+            if (typeof type === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "type"');
+            }
+            const apiPath = '/account/mfa/authenticators/{type}'.replace('{type}', type);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        createMFAAuthenticator(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'type' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    type: paramsOrFirst
+                };
+            }
+            const type = params.type;
+            if (typeof type === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "type"');
+            }
+            const apiPath = '/account/mfa/authenticators/{type}'.replace('{type}', type);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updateMfaAuthenticator(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'type' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    type: paramsOrFirst,
+                    otp: rest[0]
+                };
+            }
+            const type = params.type;
+            const otp = params.otp;
+            if (typeof type === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "type"');
+            }
+            if (typeof otp === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "otp"');
+            }
+            const apiPath = '/account/mfa/authenticators/{type}'.replace('{type}', type);
+            const payload = {};
+            if (typeof otp !== 'undefined') {
+                payload['otp'] = otp;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        updateMFAAuthenticator(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'type' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    type: paramsOrFirst,
+                    otp: rest[0]
+                };
+            }
+            const type = params.type;
+            const otp = params.otp;
+            if (typeof type === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "type"');
+            }
+            if (typeof otp === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "otp"');
+            }
+            const apiPath = '/account/mfa/authenticators/{type}'.replace('{type}', type);
+            const payload = {};
+            if (typeof otp !== 'undefined') {
+                payload['otp'] = otp;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        deleteMfaAuthenticator(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'type' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    type: paramsOrFirst
+                };
+            }
+            const type = params.type;
+            if (typeof type === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "type"');
+            }
+            const apiPath = '/account/mfa/authenticators/{type}'.replace('{type}', type);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        deleteMFAAuthenticator(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'type' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    type: paramsOrFirst
+                };
+            }
+            const type = params.type;
+            if (typeof type === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "type"');
+            }
+            const apiPath = '/account/mfa/authenticators/{type}'.replace('{type}', type);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        createMfaChallenge(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'factor' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    factor: paramsOrFirst
+                };
+            }
+            const factor = params.factor;
+            if (typeof factor === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "factor"');
+            }
+            const apiPath = '/account/mfa/challenge';
+            const payload = {};
+            if (typeof factor !== 'undefined') {
+                payload['factor'] = factor;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        createMFAChallenge(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'factor' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    factor: paramsOrFirst
+                };
+            }
+            const factor = params.factor;
+            if (typeof factor === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "factor"');
+            }
+            const apiPath = '/account/mfa/challenge';
+            const payload = {};
+            if (typeof factor !== 'undefined') {
+                payload['factor'] = factor;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updateMfaChallenge(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    challengeId: paramsOrFirst,
+                    otp: rest[0]
+                };
+            }
+            const challengeId = params.challengeId;
+            const otp = params.otp;
+            if (typeof challengeId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "challengeId"');
+            }
+            if (typeof otp === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "otp"');
+            }
+            const apiPath = '/account/mfa/challenge';
+            const payload = {};
+            if (typeof challengeId !== 'undefined') {
+                payload['challengeId'] = challengeId;
+            }
+            if (typeof otp !== 'undefined') {
+                payload['otp'] = otp;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        updateMFAChallenge(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    challengeId: paramsOrFirst,
+                    otp: rest[0]
+                };
+            }
+            const challengeId = params.challengeId;
+            const otp = params.otp;
+            if (typeof challengeId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "challengeId"');
+            }
+            if (typeof otp === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "otp"');
+            }
+            const apiPath = '/account/mfa/challenge';
+            const payload = {};
+            if (typeof challengeId !== 'undefined') {
+                payload['challengeId'] = challengeId;
+            }
+            if (typeof otp !== 'undefined') {
+                payload['otp'] = otp;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        /**
+         * List the factors available on the account to be used as a MFA challange.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaFactors>}
+         * @deprecated This API has been deprecated since 1.8.0. Please use `Account.listMFAFactors` instead.
+         */
+        listMfaFactors() {
+            const apiPath = '/account/mfa/factors';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List the factors available on the account to be used as a MFA challange.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaFactors>}
+         */
+        listMFAFactors() {
+            const apiPath = '/account/mfa/factors';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaRecoveryCodes>}
+         * @deprecated This API has been deprecated since 1.8.0. Please use `Account.getMFARecoveryCodes` instead.
+         */
+        getMfaRecoveryCodes() {
+            const apiPath = '/account/mfa/recovery-codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaRecoveryCodes>}
+         */
+        getMFARecoveryCodes() {
+            const apiPath = '/account/mfa/recovery-codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](/docs/references/cloud/client-web/account#createMfaChallenge) method.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaRecoveryCodes>}
+         * @deprecated This API has been deprecated since 1.8.0. Please use `Account.createMFARecoveryCodes` instead.
+         */
+        createMfaRecoveryCodes() {
+            const apiPath = '/account/mfa/recovery-codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        /**
+         * Generate recovery codes as backup for MFA flow. It's recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](/docs/references/cloud/client-web/account#createMfaChallenge) method.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaRecoveryCodes>}
+         */
+        createMFARecoveryCodes() {
+            const apiPath = '/account/mfa/recovery-codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        /**
+         * Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaRecoveryCodes>}
+         * @deprecated This API has been deprecated since 1.8.0. Please use `Account.updateMFARecoveryCodes` instead.
+         */
+        updateMfaRecoveryCodes() {
+            const apiPath = '/account/mfa/recovery-codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        /**
+         * Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.MfaRecoveryCodes>}
+         */
+        updateMFARecoveryCodes() {
+            const apiPath = '/account/mfa/recovery-codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        updateName(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    name: paramsOrFirst
+                };
+            }
+            const name = params.name;
+            if (typeof name === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "name"');
+            }
+            const apiPath = '/account/name';
+            const payload = {};
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        updatePassword(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    password: paramsOrFirst,
+                    oldPassword: rest[0]
+                };
+            }
+            const password = params.password;
+            const oldPassword = params.oldPassword;
+            if (typeof password === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "password"');
+            }
+            const apiPath = '/account/password';
+            const payload = {};
+            if (typeof password !== 'undefined') {
+                payload['password'] = password;
+            }
+            if (typeof oldPassword !== 'undefined') {
+                payload['oldPassword'] = oldPassword;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        updatePhone(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    phone: paramsOrFirst,
+                    password: rest[0]
+                };
+            }
+            const phone = params.phone;
+            const password = params.password;
+            if (typeof phone === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "phone"');
+            }
+            if (typeof password === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "password"');
+            }
+            const apiPath = '/account/phone';
+            const payload = {};
+            if (typeof phone !== 'undefined') {
+                payload['phone'] = phone;
+            }
+            if (typeof password !== 'undefined') {
+                payload['password'] = password;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        /**
+         * Get the preferences as a key-value object for the currently logged in user.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Preferences>}
+         */
+        getPrefs() {
+            const apiPath = '/account/prefs';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updatePrefs(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'prefs' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    prefs: paramsOrFirst
+                };
+            }
+            const prefs = params.prefs;
+            if (typeof prefs === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "prefs"');
+            }
+            const apiPath = '/account/prefs';
+            const payload = {};
+            if (typeof prefs !== 'undefined') {
+                payload['prefs'] = prefs;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        createRecovery(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    email: paramsOrFirst,
+                    url: rest[0]
+                };
+            }
+            const email = params.email;
+            const url = params.url;
+            if (typeof email === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "email"');
+            }
+            if (typeof url === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "url"');
+            }
+            const apiPath = '/account/recovery';
+            const payload = {};
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updateRecovery(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    secret: rest[0],
+                    password: rest[1]
+                };
+            }
+            const userId = params.userId;
+            const secret = params.secret;
+            const password = params.password;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            if (typeof password === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "password"');
+            }
+            const apiPath = '/account/recovery';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            if (typeof password !== 'undefined') {
+                payload['password'] = password;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        /**
+         * Get the list of active sessions across different devices for the currently logged in user.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.SessionList>}
+         */
+        listSessions() {
+            const apiPath = '/account/sessions';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * Delete all sessions from the user account and remove any sessions cookies from the end client.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<{}>}
+         */
+        deleteSessions() {
+            const apiPath = '/account/sessions';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        /**
+         * Use this endpoint to allow a new user to register an anonymous account in your project. This route will also create a new session for the user. To allow the new user to convert an anonymous account to a normal account, you need to update its [email and password](https://appwrite.io/docs/references/cloud/client-web/account#updateEmail) or create an [OAuth2 session](https://appwrite.io/docs/references/cloud/client-web/account#CreateOAuth2Session).
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.Session>}
+         */
+        createAnonymousSession() {
+            const apiPath = '/account/sessions/anonymous';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        createEmailPasswordSession(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    email: paramsOrFirst,
+                    password: rest[0]
+                };
+            }
+            const email = params.email;
+            const password = params.password;
+            if (typeof email === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "email"');
+            }
+            if (typeof password === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "password"');
+            }
+            const apiPath = '/account/sessions/email';
+            const payload = {};
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof password !== 'undefined') {
+                payload['password'] = password;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updateMagicURLSession(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    secret: rest[0]
+                };
+            }
+            const userId = params.userId;
+            const secret = params.secret;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/account/sessions/magic-url';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        createOAuth2Session(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'provider' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    provider: paramsOrFirst,
+                    success: rest[0],
+                    failure: rest[1],
+                    scopes: rest[2]
+                };
+            }
+            const provider = params.provider;
+            const success = params.success;
+            const failure = params.failure;
+            const scopes = params.scopes;
+            if (typeof provider === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "provider"');
+            }
+            const apiPath = '/account/sessions/oauth2/{provider}'.replace('{provider}', provider);
+            const payload = {};
+            if (typeof success !== 'undefined') {
+                payload['success'] = success;
+            }
+            if (typeof failure !== 'undefined') {
+                payload['failure'] = failure;
+            }
+            if (typeof scopes !== 'undefined') {
+                payload['scopes'] = scopes;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            if (typeof window !== 'undefined' && (window === null || window === void 0 ? void 0 : window.location)) {
+                window.location.href = uri.toString();
+                return;
+            }
+            else {
+                return uri.toString();
+            }
+        }
+        updatePhoneSession(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    secret: rest[0]
+                };
+            }
+            const userId = params.userId;
+            const secret = params.secret;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/account/sessions/phone';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        createSession(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    secret: rest[0]
+                };
+            }
+            const userId = params.userId;
+            const secret = params.secret;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/account/sessions/token';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        getSession(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    sessionId: paramsOrFirst
+                };
+            }
+            const sessionId = params.sessionId;
+            if (typeof sessionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "sessionId"');
+            }
+            const apiPath = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updateSession(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    sessionId: paramsOrFirst
+                };
+            }
+            const sessionId = params.sessionId;
+            if (typeof sessionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "sessionId"');
+            }
+            const apiPath = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        deleteSession(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    sessionId: paramsOrFirst
+                };
+            }
+            const sessionId = params.sessionId;
+            if (typeof sessionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "sessionId"');
+            }
+            const apiPath = '/account/sessions/{sessionId}'.replace('{sessionId}', sessionId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        /**
+         * Block the currently logged in user account. Behind the scene, the user record is not deleted but permanently blocked from any access. To completely delete a user, use the Users API instead.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.User<Preferences>>}
+         */
+        updateStatus() {
+            const apiPath = '/account/status';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        createPushTarget(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    targetId: paramsOrFirst,
+                    identifier: rest[0],
+                    providerId: rest[1]
+                };
+            }
+            const targetId = params.targetId;
+            const identifier = params.identifier;
+            const providerId = params.providerId;
+            if (typeof targetId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "targetId"');
+            }
+            if (typeof identifier === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "identifier"');
+            }
+            const apiPath = '/account/targets/push';
+            const payload = {};
+            if (typeof targetId !== 'undefined') {
+                payload['targetId'] = targetId;
+            }
+            if (typeof identifier !== 'undefined') {
+                payload['identifier'] = identifier;
+            }
+            if (typeof providerId !== 'undefined') {
+                payload['providerId'] = providerId;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updatePushTarget(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    targetId: paramsOrFirst,
+                    identifier: rest[0]
+                };
+            }
+            const targetId = params.targetId;
+            const identifier = params.identifier;
+            if (typeof targetId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "targetId"');
+            }
+            if (typeof identifier === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "identifier"');
+            }
+            const apiPath = '/account/targets/{targetId}/push'.replace('{targetId}', targetId);
+            const payload = {};
+            if (typeof identifier !== 'undefined') {
+                payload['identifier'] = identifier;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        deletePushTarget(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    targetId: paramsOrFirst
+                };
+            }
+            const targetId = params.targetId;
+            if (typeof targetId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "targetId"');
+            }
+            const apiPath = '/account/targets/{targetId}/push'.replace('{targetId}', targetId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        createEmailToken(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    email: rest[0],
+                    phrase: rest[1]
+                };
+            }
+            const userId = params.userId;
+            const email = params.email;
+            const phrase = params.phrase;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof email === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "email"');
+            }
+            const apiPath = '/account/tokens/email';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof phrase !== 'undefined') {
+                payload['phrase'] = phrase;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        createMagicURLToken(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    email: rest[0],
+                    url: rest[1],
+                    phrase: rest[2]
+                };
+            }
+            const userId = params.userId;
+            const email = params.email;
+            const url = params.url;
+            const phrase = params.phrase;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof email === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "email"');
+            }
+            const apiPath = '/account/tokens/magic-url';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            if (typeof phrase !== 'undefined') {
+                payload['phrase'] = phrase;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        createOAuth2Token(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'provider' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    provider: paramsOrFirst,
+                    success: rest[0],
+                    failure: rest[1],
+                    scopes: rest[2]
+                };
+            }
+            const provider = params.provider;
+            const success = params.success;
+            const failure = params.failure;
+            const scopes = params.scopes;
+            if (typeof provider === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "provider"');
+            }
+            const apiPath = '/account/tokens/oauth2/{provider}'.replace('{provider}', provider);
+            const payload = {};
+            if (typeof success !== 'undefined') {
+                payload['success'] = success;
+            }
+            if (typeof failure !== 'undefined') {
+                payload['failure'] = failure;
+            }
+            if (typeof scopes !== 'undefined') {
+                payload['scopes'] = scopes;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            if (typeof window !== 'undefined' && (window === null || window === void 0 ? void 0 : window.location)) {
+                window.location.href = uri.toString();
+                return;
+            }
+            else {
+                return uri.toString();
+            }
+        }
+        createPhoneToken(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    phone: rest[0]
+                };
+            }
+            const userId = params.userId;
+            const phone = params.phone;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof phone === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "phone"');
+            }
+            const apiPath = '/account/tokens/phone';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof phone !== 'undefined') {
+                payload['phone'] = phone;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        createVerification(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    url: paramsOrFirst
+                };
+            }
+            const url = params.url;
+            if (typeof url === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "url"');
+            }
+            const apiPath = '/account/verification';
+            const payload = {};
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updateVerification(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    secret: rest[0]
+                };
+            }
+            const userId = params.userId;
+            const secret = params.secret;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/account/verification';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        /**
+         * Use this endpoint to send a verification SMS to the currently logged in user. This endpoint is meant for use after updating a user's phone number using the [accountUpdatePhone](https://appwrite.io/docs/references/cloud/client-web/account#updatePhone) endpoint. Learn more about how to [complete the verification process](https://appwrite.io/docs/references/cloud/client-web/account#updatePhoneVerification). The verification code sent to the user's phone number is valid for 15 minutes.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.Token>}
+         */
+        createPhoneVerification() {
+            const apiPath = '/account/verification/phone';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        updatePhoneVerification(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    userId: paramsOrFirst,
+                    secret: rest[0]
+                };
+            }
+            const userId = params.userId;
+            const secret = params.secret;
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/account/verification/phone';
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+    }
+
+    class Avatars {
+        constructor(client) {
+            this.client = client;
+        }
+        getBrowser(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'code' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    code: paramsOrFirst,
+                    width: rest[0],
+                    height: rest[1],
+                    quality: rest[2]
+                };
+            }
+            const code = params.code;
+            const width = params.width;
+            const height = params.height;
+            const quality = params.quality;
+            if (typeof code === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "code"');
+            }
+            const apiPath = '/avatars/browsers/{code}'.replace('{code}', code);
+            const payload = {};
+            if (typeof width !== 'undefined') {
+                payload['width'] = width;
+            }
+            if (typeof height !== 'undefined') {
+                payload['height'] = height;
+            }
+            if (typeof quality !== 'undefined') {
+                payload['quality'] = quality;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getCreditCard(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'code' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    code: paramsOrFirst,
+                    width: rest[0],
+                    height: rest[1],
+                    quality: rest[2]
+                };
+            }
+            const code = params.code;
+            const width = params.width;
+            const height = params.height;
+            const quality = params.quality;
+            if (typeof code === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "code"');
+            }
+            const apiPath = '/avatars/credit-cards/{code}'.replace('{code}', code);
+            const payload = {};
+            if (typeof width !== 'undefined') {
+                payload['width'] = width;
+            }
+            if (typeof height !== 'undefined') {
+                payload['height'] = height;
+            }
+            if (typeof quality !== 'undefined') {
+                payload['quality'] = quality;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getFavicon(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    url: paramsOrFirst
+                };
+            }
+            const url = params.url;
+            if (typeof url === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "url"');
+            }
+            const apiPath = '/avatars/favicon';
+            const payload = {};
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getFlag(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'code' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    code: paramsOrFirst,
+                    width: rest[0],
+                    height: rest[1],
+                    quality: rest[2]
+                };
+            }
+            const code = params.code;
+            const width = params.width;
+            const height = params.height;
+            const quality = params.quality;
+            if (typeof code === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "code"');
+            }
+            const apiPath = '/avatars/flags/{code}'.replace('{code}', code);
+            const payload = {};
+            if (typeof width !== 'undefined') {
+                payload['width'] = width;
+            }
+            if (typeof height !== 'undefined') {
+                payload['height'] = height;
+            }
+            if (typeof quality !== 'undefined') {
+                payload['quality'] = quality;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getImage(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    url: paramsOrFirst,
+                    width: rest[0],
+                    height: rest[1]
+                };
+            }
+            const url = params.url;
+            const width = params.width;
+            const height = params.height;
+            if (typeof url === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "url"');
+            }
+            const apiPath = '/avatars/image';
+            const payload = {};
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            if (typeof width !== 'undefined') {
+                payload['width'] = width;
+            }
+            if (typeof height !== 'undefined') {
+                payload['height'] = height;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getInitials(paramsOrFirst, ...rest) {
+            let params;
+            if (!paramsOrFirst || (paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    name: paramsOrFirst,
+                    width: rest[0],
+                    height: rest[1],
+                    background: rest[2]
+                };
+            }
+            const name = params.name;
+            const width = params.width;
+            const height = params.height;
+            const background = params.background;
+            const apiPath = '/avatars/initials';
+            const payload = {};
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            if (typeof width !== 'undefined') {
+                payload['width'] = width;
+            }
+            if (typeof height !== 'undefined') {
+                payload['height'] = height;
+            }
+            if (typeof background !== 'undefined') {
+                payload['background'] = background;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getQR(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    text: paramsOrFirst,
+                    size: rest[0],
+                    margin: rest[1],
+                    download: rest[2]
+                };
+            }
+            const text = params.text;
+            const size = params.size;
+            const margin = params.margin;
+            const download = params.download;
+            if (typeof text === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "text"');
+            }
+            const apiPath = '/avatars/qr';
+            const payload = {};
+            if (typeof text !== 'undefined') {
+                payload['text'] = text;
+            }
+            if (typeof size !== 'undefined') {
+                payload['size'] = size;
+            }
+            if (typeof margin !== 'undefined') {
+                payload['margin'] = margin;
+            }
+            if (typeof download !== 'undefined') {
+                payload['download'] = download;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+    }
+
+    class Databases {
+        constructor(client) {
+            this.client = client;
+        }
+        listDocuments(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    queries: rest[1]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const queries = params.queries;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        createDocument(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1],
+                    data: rest[2],
+                    permissions: rest[3]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            const data = params.data;
+            const permissions = params.permissions;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            if (typeof data === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "data"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+            const payload = {};
+            if (typeof documentId !== 'undefined') {
+                payload['documentId'] = documentId;
+            }
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        getDocument(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1],
+                    queries: rest[2]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            const queries = params.queries;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        upsertDocument(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1],
+                    data: rest[2],
+                    permissions: rest[3]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            const data = params.data;
+            const permissions = params.permissions;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            if (typeof data === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "data"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload = {};
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        updateDocument(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1],
+                    data: rest[2],
+                    permissions: rest[3]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            const data = params.data;
+            const permissions = params.permissions;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload = {};
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        deleteDocument(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        decrementDocumentAttribute(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1],
+                    attribute: rest[2],
+                    value: rest[3],
+                    min: rest[4]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            const attribute = params.attribute;
+            const value = params.value;
+            const min = params.min;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            if (typeof attribute === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "attribute"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}/{attribute}/decrement'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId).replace('{attribute}', attribute);
+            const payload = {};
+            if (typeof value !== 'undefined') {
+                payload['value'] = value;
+            }
+            if (typeof min !== 'undefined') {
+                payload['min'] = min;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        incrementDocumentAttribute(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    collectionId: rest[0],
+                    documentId: rest[1],
+                    attribute: rest[2],
+                    value: rest[3],
+                    max: rest[4]
+                };
+            }
+            const databaseId = params.databaseId;
+            const collectionId = params.collectionId;
+            const documentId = params.documentId;
+            const attribute = params.attribute;
+            const value = params.value;
+            const max = params.max;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "documentId"');
+            }
+            if (typeof attribute === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "attribute"');
+            }
+            const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}/{attribute}/increment'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId).replace('{attribute}', attribute);
+            const payload = {};
+            if (typeof value !== 'undefined') {
+                payload['value'] = value;
+            }
+            if (typeof max !== 'undefined') {
+                payload['max'] = max;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+    }
+
+    class Functions {
+        constructor(client) {
+            this.client = client;
+        }
+        listExecutions(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    functionId: paramsOrFirst,
+                    queries: rest[0]
+                };
+            }
+            const functionId = params.functionId;
+            const queries = params.queries;
+            if (typeof functionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "functionId"');
+            }
+            const apiPath = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        createExecution(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    functionId: paramsOrFirst,
+                    body: rest[0],
+                    async: rest[1],
+                    xpath: rest[2],
+                    method: rest[3],
+                    headers: rest[4],
+                    scheduledAt: rest[5]
+                };
+            }
+            const functionId = params.functionId;
+            const body = params.body;
+            const async = params.async;
+            const xpath = params.xpath;
+            const method = params.method;
+            const headers = params.headers;
+            const scheduledAt = params.scheduledAt;
+            if (typeof functionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "functionId"');
+            }
+            const apiPath = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
+            const payload = {};
+            if (typeof body !== 'undefined') {
+                payload['body'] = body;
+            }
+            if (typeof async !== 'undefined') {
+                payload['async'] = async;
+            }
+            if (typeof xpath !== 'undefined') {
+                payload['path'] = xpath;
+            }
+            if (typeof method !== 'undefined') {
+                payload['method'] = method;
+            }
+            if (typeof headers !== 'undefined') {
+                payload['headers'] = headers;
+            }
+            if (typeof scheduledAt !== 'undefined') {
+                payload['scheduledAt'] = scheduledAt;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        getExecution(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    functionId: paramsOrFirst,
+                    executionId: rest[0]
+                };
+            }
+            const functionId = params.functionId;
+            const executionId = params.executionId;
+            if (typeof functionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "functionId"');
+            }
+            if (typeof executionId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "executionId"');
+            }
+            const apiPath = '/functions/{functionId}/executions/{executionId}'.replace('{functionId}', functionId).replace('{executionId}', executionId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+    }
+
+    class Graphql {
+        constructor(client) {
+            this.client = client;
+        }
+        query(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'query' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    query: paramsOrFirst
+                };
+            }
+            const query = params.query;
+            if (typeof query === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "query"');
+            }
+            const apiPath = '/graphql';
+            const payload = {};
+            if (typeof query !== 'undefined') {
+                payload['query'] = query;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'x-sdk-graphql': 'true',
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        mutation(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst) && 'query' in paramsOrFirst)) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    query: paramsOrFirst
+                };
+            }
+            const query = params.query;
+            if (typeof query === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "query"');
+            }
+            const apiPath = '/graphql/mutation';
+            const payload = {};
+            if (typeof query !== 'undefined') {
+                payload['query'] = query;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'x-sdk-graphql': 'true',
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+    }
+
+    class Locale {
+        constructor(client) {
+            this.client = client;
+        }
+        /**
+         * Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.
+         *
+         * ([IP Geolocation by DB-IP](https://db-ip.com))
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.Locale>}
+         */
+        get() {
+            const apiPath = '/locale';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all locale codes in [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.LocaleCodeList>}
+         */
+        listCodes() {
+            const apiPath = '/locale/codes';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all continents. You can use the locale header to get the data in a supported language.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.ContinentList>}
+         */
+        listContinents() {
+            const apiPath = '/locale/continents';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all countries. You can use the locale header to get the data in a supported language.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.CountryList>}
+         */
+        listCountries() {
+            const apiPath = '/locale/countries';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all countries that are currently members of the EU. You can use the locale header to get the data in a supported language.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.CountryList>}
+         */
+        listCountriesEU() {
+            const apiPath = '/locale/countries/eu';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all countries phone codes. You can use the locale header to get the data in a supported language.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.PhoneList>}
+         */
+        listCountriesPhones() {
+            const apiPath = '/locale/countries/phones';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all currencies, including currency symbol, name, plural, and decimal digits for all major and minor currencies. You can use the locale header to get the data in a supported language.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.CurrencyList>}
+         */
+        listCurrencies() {
+            const apiPath = '/locale/currencies';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        /**
+         * List of all languages classified by ISO 639-1 including 2-letter code, name in English, and name in the respective language.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise<Models.LanguageList>}
+         */
+        listLanguages() {
+            const apiPath = '/locale/languages';
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+    }
+
+    class Messaging {
+        constructor(client) {
+            this.client = client;
+        }
+        createSubscriber(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    topicId: paramsOrFirst,
+                    subscriberId: rest[0],
+                    targetId: rest[1]
+                };
+            }
+            const topicId = params.topicId;
+            const subscriberId = params.subscriberId;
+            const targetId = params.targetId;
+            if (typeof topicId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "topicId"');
+            }
+            if (typeof subscriberId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "subscriberId"');
+            }
+            if (typeof targetId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "targetId"');
+            }
+            const apiPath = '/messaging/topics/{topicId}/subscribers'.replace('{topicId}', topicId);
+            const payload = {};
+            if (typeof subscriberId !== 'undefined') {
+                payload['subscriberId'] = subscriberId;
+            }
+            if (typeof targetId !== 'undefined') {
+                payload['targetId'] = targetId;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        deleteSubscriber(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    topicId: paramsOrFirst,
+                    subscriberId: rest[0]
+                };
+            }
+            const topicId = params.topicId;
+            const subscriberId = params.subscriberId;
+            if (typeof topicId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "topicId"');
+            }
+            if (typeof subscriberId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "subscriberId"');
+            }
+            const apiPath = '/messaging/topics/{topicId}/subscribers/{subscriberId}'.replace('{topicId}', topicId).replace('{subscriberId}', subscriberId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+    }
+
+    class Storage {
+        constructor(client) {
+            this.client = client;
+        }
+        listFiles(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    queries: rest[0],
+                    search: rest[1]
+                };
+            }
+            const bucketId = params.bucketId;
+            const queries = params.queries;
+            const search = params.search;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            if (typeof search !== 'undefined') {
+                payload['search'] = search;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        createFile(paramsOrFirst, ...rest) {
+            let params;
+            let onProgress;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+                onProgress = paramsOrFirst === null || paramsOrFirst === void 0 ? void 0 : paramsOrFirst.onProgress;
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0],
+                    file: rest[1],
+                    permissions: rest[2]
+                };
+                onProgress = rest[3];
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            const file = params.file;
+            const permissions = params.permissions;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            if (typeof file === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "file"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
+            const payload = {};
+            if (typeof fileId !== 'undefined') {
+                payload['fileId'] = fileId;
+            }
+            if (typeof file !== 'undefined') {
+                payload['file'] = file;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'multipart/form-data',
+            };
+            return this.client.chunkedUpload('post', uri, apiHeaders, payload, onProgress);
+        }
+        getFile(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0]
+                };
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updateFile(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0],
+                    name: rest[1],
+                    permissions: rest[2]
+                };
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            const name = params.name;
+            const permissions = params.permissions;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
+            const payload = {};
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        deleteFile(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0]
+                };
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        getFileDownload(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0],
+                    token: rest[1]
+                };
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            const token = params.token;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/download'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
+            const payload = {};
+            if (typeof token !== 'undefined') {
+                payload['token'] = token;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getFilePreview(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0],
+                    width: rest[1],
+                    height: rest[2],
+                    gravity: rest[3],
+                    quality: rest[4],
+                    borderWidth: rest[5],
+                    borderColor: rest[6],
+                    borderRadius: rest[7],
+                    opacity: rest[8],
+                    rotation: rest[9],
+                    background: rest[10],
+                    output: rest[11],
+                    token: rest[12]
+                };
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            const width = params.width;
+            const height = params.height;
+            const gravity = params.gravity;
+            const quality = params.quality;
+            const borderWidth = params.borderWidth;
+            const borderColor = params.borderColor;
+            const borderRadius = params.borderRadius;
+            const opacity = params.opacity;
+            const rotation = params.rotation;
+            const background = params.background;
+            const output = params.output;
+            const token = params.token;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
+            const payload = {};
+            if (typeof width !== 'undefined') {
+                payload['width'] = width;
+            }
+            if (typeof height !== 'undefined') {
+                payload['height'] = height;
+            }
+            if (typeof gravity !== 'undefined') {
+                payload['gravity'] = gravity;
+            }
+            if (typeof quality !== 'undefined') {
+                payload['quality'] = quality;
+            }
+            if (typeof borderWidth !== 'undefined') {
+                payload['borderWidth'] = borderWidth;
+            }
+            if (typeof borderColor !== 'undefined') {
+                payload['borderColor'] = borderColor;
+            }
+            if (typeof borderRadius !== 'undefined') {
+                payload['borderRadius'] = borderRadius;
+            }
+            if (typeof opacity !== 'undefined') {
+                payload['opacity'] = opacity;
+            }
+            if (typeof rotation !== 'undefined') {
+                payload['rotation'] = rotation;
+            }
+            if (typeof background !== 'undefined') {
+                payload['background'] = background;
+            }
+            if (typeof output !== 'undefined') {
+                payload['output'] = output;
+            }
+            if (typeof token !== 'undefined') {
+                payload['token'] = token;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+        getFileView(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    bucketId: paramsOrFirst,
+                    fileId: rest[0],
+                    token: rest[1]
+                };
+            }
+            const bucketId = params.bucketId;
+            const fileId = params.fileId;
+            const token = params.token;
+            if (typeof bucketId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "bucketId"');
+            }
+            if (typeof fileId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "fileId"');
+            }
+            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/view'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
+            const payload = {};
+            if (typeof token !== 'undefined') {
+                payload['token'] = token;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
+            return uri.toString();
+        }
+    }
+
+    class TablesDB {
+        constructor(client) {
+            this.client = client;
+        }
+        listRows(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    queries: rest[1]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const queries = params.queries;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows'.replace('{databaseId}', databaseId).replace('{tableId}', tableId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        createRow(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1],
+                    data: rest[2],
+                    permissions: rest[3]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            const data = params.data;
+            const permissions = params.permissions;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            if (typeof data === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "data"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows'.replace('{databaseId}', databaseId).replace('{tableId}', tableId);
+            const payload = {};
+            if (typeof rowId !== 'undefined') {
+                payload['rowId'] = rowId;
+            }
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        getRow(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1],
+                    queries: rest[2]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            const queries = params.queries;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}'.replace('{databaseId}', databaseId).replace('{tableId}', tableId).replace('{rowId}', rowId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        upsertRow(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1],
+                    data: rest[2],
+                    permissions: rest[3]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            const data = params.data;
+            const permissions = params.permissions;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}'.replace('{databaseId}', databaseId).replace('{tableId}', tableId).replace('{rowId}', rowId);
+            const payload = {};
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        updateRow(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1],
+                    data: rest[2],
+                    permissions: rest[3]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            const data = params.data;
+            const permissions = params.permissions;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}'.replace('{databaseId}', databaseId).replace('{tableId}', tableId).replace('{rowId}', rowId);
+            const payload = {};
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        deleteRow(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}'.replace('{databaseId}', databaseId).replace('{tableId}', tableId).replace('{rowId}', rowId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        decrementRowColumn(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1],
+                    column: rest[2],
+                    value: rest[3],
+                    min: rest[4]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            const column = params.column;
+            const value = params.value;
+            const min = params.min;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            if (typeof column === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "column"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}/{column}/decrement'.replace('{databaseId}', databaseId).replace('{tableId}', tableId).replace('{rowId}', rowId).replace('{column}', column);
+            const payload = {};
+            if (typeof value !== 'undefined') {
+                payload['value'] = value;
+            }
+            if (typeof min !== 'undefined') {
+                payload['min'] = min;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        incrementRowColumn(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    databaseId: paramsOrFirst,
+                    tableId: rest[0],
+                    rowId: rest[1],
+                    column: rest[2],
+                    value: rest[3],
+                    max: rest[4]
+                };
+            }
+            const databaseId = params.databaseId;
+            const tableId = params.tableId;
+            const rowId = params.rowId;
+            const column = params.column;
+            const value = params.value;
+            const max = params.max;
+            if (typeof databaseId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "databaseId"');
+            }
+            if (typeof tableId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "tableId"');
+            }
+            if (typeof rowId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "rowId"');
+            }
+            if (typeof column === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "column"');
+            }
+            const apiPath = '/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}/{column}/increment'.replace('{databaseId}', databaseId).replace('{tableId}', tableId).replace('{rowId}', rowId).replace('{column}', column);
+            const payload = {};
+            if (typeof value !== 'undefined') {
+                payload['value'] = value;
+            }
+            if (typeof max !== 'undefined') {
+                payload['max'] = max;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+    }
+
+    class Teams {
+        constructor(client) {
+            this.client = client;
+        }
+        list(paramsOrFirst, ...rest) {
+            let params;
+            if (!paramsOrFirst || (paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    queries: paramsOrFirst,
+                    search: rest[0]
+                };
+            }
+            const queries = params.queries;
+            const search = params.search;
+            const apiPath = '/teams';
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            if (typeof search !== 'undefined') {
+                payload['search'] = search;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        create(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    name: rest[0],
+                    roles: rest[1]
+                };
+            }
+            const teamId = params.teamId;
+            const name = params.name;
+            const roles = params.roles;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof name === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "name"');
+            }
+            const apiPath = '/teams';
+            const payload = {};
+            if (typeof teamId !== 'undefined') {
+                payload['teamId'] = teamId;
+            }
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            if (typeof roles !== 'undefined') {
+                payload['roles'] = roles;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        get(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst
+                };
+            }
+            const teamId = params.teamId;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updateName(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    name: rest[0]
+                };
+            }
+            const teamId = params.teamId;
+            const name = params.name;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof name === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "name"');
+            }
+            const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
+            const payload = {};
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+        delete(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst
+                };
+            }
+            const teamId = params.teamId;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        listMemberships(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    queries: rest[0],
+                    search: rest[1]
+                };
+            }
+            const teamId = params.teamId;
+            const queries = params.queries;
+            const search = params.search;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
+            const payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            if (typeof search !== 'undefined') {
+                payload['search'] = search;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        createMembership(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    roles: rest[0],
+                    email: rest[1],
+                    userId: rest[2],
+                    phone: rest[3],
+                    url: rest[4],
+                    name: rest[5]
+                };
+            }
+            const teamId = params.teamId;
+            const roles = params.roles;
+            const email = params.email;
+            const userId = params.userId;
+            const phone = params.phone;
+            const url = params.url;
+            const name = params.name;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof roles === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "roles"');
+            }
+            const apiPath = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
+            const payload = {};
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof phone !== 'undefined') {
+                payload['phone'] = phone;
+            }
+            if (typeof roles !== 'undefined') {
+                payload['roles'] = roles;
+            }
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('post', uri, apiHeaders, payload);
+        }
+        getMembership(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    membershipId: rest[0]
+                };
+            }
+            const teamId = params.teamId;
+            const membershipId = params.membershipId;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "membershipId"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updateMembership(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    membershipId: rest[0],
+                    roles: rest[1]
+                };
+            }
+            const teamId = params.teamId;
+            const membershipId = params.membershipId;
+            const roles = params.roles;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "membershipId"');
+            }
+            if (typeof roles === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "roles"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload = {};
+            if (typeof roles !== 'undefined') {
+                payload['roles'] = roles;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        deleteMembership(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    membershipId: rest[0]
+                };
+            }
+            const teamId = params.teamId;
+            const membershipId = params.membershipId;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "membershipId"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('delete', uri, apiHeaders, payload);
+        }
+        updateMembershipStatus(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    membershipId: rest[0],
+                    userId: rest[1],
+                    secret: rest[2]
+                };
+            }
+            const teamId = params.teamId;
+            const membershipId = params.membershipId;
+            const userId = params.userId;
+            const secret = params.secret;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "membershipId"');
+            }
+            if (typeof userId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('patch', uri, apiHeaders, payload);
+        }
+        getPrefs(paramsOrFirst) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst
+                };
+            }
+            const teamId = params.teamId;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}/prefs'.replace('{teamId}', teamId);
+            const payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {};
+            return this.client.call('get', uri, apiHeaders, payload);
+        }
+        updatePrefs(paramsOrFirst, ...rest) {
+            let params;
+            if ((paramsOrFirst && typeof paramsOrFirst === 'object' && !Array.isArray(paramsOrFirst))) {
+                params = (paramsOrFirst || {});
+            }
+            else {
+                params = {
+                    teamId: paramsOrFirst,
+                    prefs: rest[0]
+                };
+            }
+            const teamId = params.teamId;
+            const prefs = params.prefs;
+            if (typeof teamId === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "teamId"');
+            }
+            if (typeof prefs === 'undefined') {
+                throw new AppwriteException('Missing required parameter: "prefs"');
+            }
+            const apiPath = '/teams/{teamId}/prefs'.replace('{teamId}', teamId);
+            const payload = {};
+            if (typeof prefs !== 'undefined') {
+                payload['prefs'] = prefs;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
+            const apiHeaders = {
+                'content-type': 'application/json',
+            };
+            return this.client.call('put', uri, apiHeaders, payload);
+        }
+    }
+
+    /**
+     * Helper class to generate permission strings for resources.
+     */
+    class Permission {
+    }
+    /**
+     * Generate read permission string for the provided role.
+     *
+     * @param {string} role
+     * @returns {string}
+     */
+    Permission.read = (role) => {
+        return `read("${role}")`;
+    };
+    /**
+     * Generate write permission string for the provided role.
+     *
+     * This is an alias of update, delete, and possibly create.
+     * Don't use write in combination with update, delete, or create.
+     *
+     * @param {string} role
+     * @returns {string}
+     */
+    Permission.write = (role) => {
+        return `write("${role}")`;
+    };
+    /**
+     * Generate create permission string for the provided role.
+     *
+     * @param {string} role
+     * @returns {string}
+     */
+    Permission.create = (role) => {
+        return `create("${role}")`;
+    };
+    /**
+     * Generate update permission string for the provided role.
+     *
+     * @param {string} role
+     * @returns {string}
+     */
+    Permission.update = (role) => {
+        return `update("${role}")`;
+    };
+    /**
+     * Generate delete permission string for the provided role.
+     *
+     * @param {string} role
+     * @returns {string}
+     */
+    Permission.delete = (role) => {
+        return `delete("${role}")`;
+    };
+
+    /**
+     * Helper class to generate role strings for `Permission`.
+     */
+    class Role {
+        /**
+         * Grants access to anyone.
+         *
+         * This includes authenticated and unauthenticated users.
+         *
+         * @returns {string}
+         */
+        static any() {
+            return 'any';
+        }
+        /**
+         * Grants access to a specific user by user ID.
+         *
+         * You can optionally pass verified or unverified for
+         * `status` to target specific types of users.
+         *
+         * @param {string} id
+         * @param {string} status
+         * @returns {string}
+         */
+        static user(id, status = '') {
+            if (status === '') {
+                return `user:${id}`;
+            }
+            return `user:${id}/${status}`;
+        }
+        /**
+         * Grants access to any authenticated or anonymous user.
+         *
+         * You can optionally pass verified or unverified for
+         * `status` to target specific types of users.
+         *
+         * @param {string} status
+         * @returns {string}
+         */
+        static users(status = '') {
+            if (status === '') {
+                return 'users';
+            }
+            return `users/${status}`;
+        }
+        /**
+         * Grants access to any guest user without a session.
+         *
+         * Authenticated users don't have access to this role.
+         *
+         * @returns {string}
+         */
+        static guests() {
+            return 'guests';
+        }
+        /**
+         * Grants access to a team by team ID.
+         *
+         * You can optionally pass a role for `role` to target
+         * team members with the specified role.
+         *
+         * @param {string} id
+         * @param {string} role
+         * @returns {string}
+         */
+        static team(id, role = '') {
+            if (role === '') {
+                return `team:${id}`;
+            }
+            return `team:${id}/${role}`;
+        }
+        /**
+         * Grants access to a specific member of a team.
+         *
+         * When the member is removed from the team, they will
+         * no longer have access.
+         *
+         * @param {string} id
+         * @returns {string}
+         */
+        static member(id) {
+            return `member:${id}`;
+        }
+        /**
+         * Grants access to a user with the specified label.
+         *
+         * @param {string} name
+         * @returns  {string}
+         */
+        static label(name) {
+            return `label:${name}`;
+        }
+    }
+
+    var _a, _ID_hexTimestamp;
+    /**
+     * Helper class to generate ID strings for resources.
+     */
+    class ID {
+        /**
+         * Uses the provided ID as the ID for the resource.
+         *
+         * @param {string} id
+         * @returns {string}
+         */
+        static custom(id) {
+            return id;
+        }
+        /**
+         * Have Appwrite generate a unique ID for you.
+         *
+         * @param {number} padding. Default is 7.
+         * @returns {string}
+         */
+        static unique(padding = 7) {
+            // Generate a unique ID with padding to have a longer ID
+            const baseId = __classPrivateFieldGet(ID, _a, "m", _ID_hexTimestamp).call(ID);
+            let randomPadding = '';
+            for (let i = 0; i < padding; i++) {
+                const randomHexDigit = Math.floor(Math.random() * 16).toString(16);
+                randomPadding += randomHexDigit;
+            }
+            return baseId + randomPadding;
+        }
+    }
+    _a = ID, _ID_hexTimestamp = function _ID_hexTimestamp() {
+        const now = new Date();
+        const sec = Math.floor(now.getTime() / 1000);
+        const msec = now.getMilliseconds();
+        // Convert to hexadecimal
+        const hexTimestamp = sec.toString(16) + msec.toString(16).padStart(5, '0');
+        return hexTimestamp;
+    };
+
+    exports.AuthenticatorType = void 0;
+    (function (AuthenticatorType) {
+        AuthenticatorType["Totp"] = "totp";
+    })(exports.AuthenticatorType || (exports.AuthenticatorType = {}));
+
+    exports.AuthenticationFactor = void 0;
+    (function (AuthenticationFactor) {
+        AuthenticationFactor["Email"] = "email";
+        AuthenticationFactor["Phone"] = "phone";
+        AuthenticationFactor["Totp"] = "totp";
+        AuthenticationFactor["Recoverycode"] = "recoverycode";
+    })(exports.AuthenticationFactor || (exports.AuthenticationFactor = {}));
+
+    exports.OAuthProvider = void 0;
+    (function (OAuthProvider) {
+        OAuthProvider["Amazon"] = "amazon";
+        OAuthProvider["Apple"] = "apple";
+        OAuthProvider["Auth0"] = "auth0";
+        OAuthProvider["Authentik"] = "authentik";
+        OAuthProvider["Autodesk"] = "autodesk";
+        OAuthProvider["Bitbucket"] = "bitbucket";
+        OAuthProvider["Bitly"] = "bitly";
+        OAuthProvider["Box"] = "box";
+        OAuthProvider["Dailymotion"] = "dailymotion";
+        OAuthProvider["Discord"] = "discord";
+        OAuthProvider["Disqus"] = "disqus";
+        OAuthProvider["Dropbox"] = "dropbox";
+        OAuthProvider["Etsy"] = "etsy";
+        OAuthProvider["Facebook"] = "facebook";
+        OAuthProvider["Figma"] = "figma";
+        OAuthProvider["Github"] = "github";
+        OAuthProvider["Gitlab"] = "gitlab";
+        OAuthProvider["Google"] = "google";
+        OAuthProvider["Linkedin"] = "linkedin";
+        OAuthProvider["Microsoft"] = "microsoft";
+        OAuthProvider["Notion"] = "notion";
+        OAuthProvider["Oidc"] = "oidc";
+        OAuthProvider["Okta"] = "okta";
+        OAuthProvider["Paypal"] = "paypal";
+        OAuthProvider["PaypalSandbox"] = "paypalSandbox";
+        OAuthProvider["Podio"] = "podio";
+        OAuthProvider["Salesforce"] = "salesforce";
+        OAuthProvider["Slack"] = "slack";
+        OAuthProvider["Spotify"] = "spotify";
+        OAuthProvider["Stripe"] = "stripe";
+        OAuthProvider["Tradeshift"] = "tradeshift";
+        OAuthProvider["TradeshiftBox"] = "tradeshiftBox";
+        OAuthProvider["Twitch"] = "twitch";
+        OAuthProvider["Wordpress"] = "wordpress";
+        OAuthProvider["Yahoo"] = "yahoo";
+        OAuthProvider["Yammer"] = "yammer";
+        OAuthProvider["Yandex"] = "yandex";
+        OAuthProvider["Zoho"] = "zoho";
+        OAuthProvider["Zoom"] = "zoom";
+        OAuthProvider["Mock"] = "mock";
+    })(exports.OAuthProvider || (exports.OAuthProvider = {}));
+
+    exports.Browser = void 0;
+    (function (Browser) {
+        Browser["AvantBrowser"] = "aa";
+        Browser["AndroidWebViewBeta"] = "an";
+        Browser["GoogleChrome"] = "ch";
+        Browser["GoogleChromeIOS"] = "ci";
+        Browser["GoogleChromeMobile"] = "cm";
+        Browser["Chromium"] = "cr";
+        Browser["MozillaFirefox"] = "ff";
+        Browser["Safari"] = "sf";
+        Browser["MobileSafari"] = "mf";
+        Browser["MicrosoftEdge"] = "ps";
+        Browser["MicrosoftEdgeIOS"] = "oi";
+        Browser["OperaMini"] = "om";
+        Browser["Opera"] = "op";
+        Browser["OperaNext"] = "on";
+    })(exports.Browser || (exports.Browser = {}));
+
+    exports.CreditCard = void 0;
+    (function (CreditCard) {
+        CreditCard["AmericanExpress"] = "amex";
+        CreditCard["Argencard"] = "argencard";
+        CreditCard["Cabal"] = "cabal";
+        CreditCard["Cencosud"] = "cencosud";
+        CreditCard["DinersClub"] = "diners";
+        CreditCard["Discover"] = "discover";
+        CreditCard["Elo"] = "elo";
+        CreditCard["Hipercard"] = "hipercard";
+        CreditCard["JCB"] = "jcb";
+        CreditCard["Mastercard"] = "mastercard";
+        CreditCard["Naranja"] = "naranja";
+        CreditCard["TarjetaShopping"] = "targeta-shopping";
+        CreditCard["UnionPay"] = "unionpay";
+        CreditCard["Visa"] = "visa";
+        CreditCard["MIR"] = "mir";
+        CreditCard["Maestro"] = "maestro";
+        CreditCard["Rupay"] = "rupay";
+    })(exports.CreditCard || (exports.CreditCard = {}));
+
+    exports.Flag = void 0;
+    (function (Flag) {
+        Flag["Afghanistan"] = "af";
+        Flag["Angola"] = "ao";
+        Flag["Albania"] = "al";
+        Flag["Andorra"] = "ad";
+        Flag["UnitedArabEmirates"] = "ae";
+        Flag["Argentina"] = "ar";
+        Flag["Armenia"] = "am";
+        Flag["AntiguaAndBarbuda"] = "ag";
+        Flag["Australia"] = "au";
+        Flag["Austria"] = "at";
+        Flag["Azerbaijan"] = "az";
+        Flag["Burundi"] = "bi";
+        Flag["Belgium"] = "be";
+        Flag["Benin"] = "bj";
+        Flag["BurkinaFaso"] = "bf";
+        Flag["Bangladesh"] = "bd";
+        Flag["Bulgaria"] = "bg";
+        Flag["Bahrain"] = "bh";
+        Flag["Bahamas"] = "bs";
+        Flag["BosniaAndHerzegovina"] = "ba";
+        Flag["Belarus"] = "by";
+        Flag["Belize"] = "bz";
+        Flag["Bolivia"] = "bo";
+        Flag["Brazil"] = "br";
+        Flag["Barbados"] = "bb";
+        Flag["BruneiDarussalam"] = "bn";
+        Flag["Bhutan"] = "bt";
+        Flag["Botswana"] = "bw";
+        Flag["CentralAfricanRepublic"] = "cf";
+        Flag["Canada"] = "ca";
+        Flag["Switzerland"] = "ch";
+        Flag["Chile"] = "cl";
+        Flag["China"] = "cn";
+        Flag["CoteDIvoire"] = "ci";
+        Flag["Cameroon"] = "cm";
+        Flag["DemocraticRepublicOfTheCongo"] = "cd";
+        Flag["RepublicOfTheCongo"] = "cg";
+        Flag["Colombia"] = "co";
+        Flag["Comoros"] = "km";
+        Flag["CapeVerde"] = "cv";
+        Flag["CostaRica"] = "cr";
+        Flag["Cuba"] = "cu";
+        Flag["Cyprus"] = "cy";
+        Flag["CzechRepublic"] = "cz";
+        Flag["Germany"] = "de";
+        Flag["Djibouti"] = "dj";
+        Flag["Dominica"] = "dm";
+        Flag["Denmark"] = "dk";
+        Flag["DominicanRepublic"] = "do";
+        Flag["Algeria"] = "dz";
+        Flag["Ecuador"] = "ec";
+        Flag["Egypt"] = "eg";
+        Flag["Eritrea"] = "er";
+        Flag["Spain"] = "es";
+        Flag["Estonia"] = "ee";
+        Flag["Ethiopia"] = "et";
+        Flag["Finland"] = "fi";
+        Flag["Fiji"] = "fj";
+        Flag["France"] = "fr";
+        Flag["MicronesiaFederatedStatesOf"] = "fm";
+        Flag["Gabon"] = "ga";
+        Flag["UnitedKingdom"] = "gb";
+        Flag["Georgia"] = "ge";
+        Flag["Ghana"] = "gh";
+        Flag["Guinea"] = "gn";
+        Flag["Gambia"] = "gm";
+        Flag["GuineaBissau"] = "gw";
+        Flag["EquatorialGuinea"] = "gq";
+        Flag["Greece"] = "gr";
+        Flag["Grenada"] = "gd";
+        Flag["Guatemala"] = "gt";
+        Flag["Guyana"] = "gy";
+        Flag["Honduras"] = "hn";
+        Flag["Croatia"] = "hr";
+        Flag["Haiti"] = "ht";
+        Flag["Hungary"] = "hu";
+        Flag["Indonesia"] = "id";
+        Flag["India"] = "in";
+        Flag["Ireland"] = "ie";
+        Flag["IranIslamicRepublicOf"] = "ir";
+        Flag["Iraq"] = "iq";
+        Flag["Iceland"] = "is";
+        Flag["Israel"] = "il";
+        Flag["Italy"] = "it";
+        Flag["Jamaica"] = "jm";
+        Flag["Jordan"] = "jo";
+        Flag["Japan"] = "jp";
+        Flag["Kazakhstan"] = "kz";
+        Flag["Kenya"] = "ke";
+        Flag["Kyrgyzstan"] = "kg";
+        Flag["Cambodia"] = "kh";
+        Flag["Kiribati"] = "ki";
+        Flag["SaintKittsAndNevis"] = "kn";
+        Flag["SouthKorea"] = "kr";
+        Flag["Kuwait"] = "kw";
+        Flag["LaoPeopleSDemocraticRepublic"] = "la";
+        Flag["Lebanon"] = "lb";
+        Flag["Liberia"] = "lr";
+        Flag["Libya"] = "ly";
+        Flag["SaintLucia"] = "lc";
+        Flag["Liechtenstein"] = "li";
+        Flag["SriLanka"] = "lk";
+        Flag["Lesotho"] = "ls";
+        Flag["Lithuania"] = "lt";
+        Flag["Luxembourg"] = "lu";
+        Flag["Latvia"] = "lv";
+        Flag["Morocco"] = "ma";
+        Flag["Monaco"] = "mc";
+        Flag["Moldova"] = "md";
+        Flag["Madagascar"] = "mg";
+        Flag["Maldives"] = "mv";
+        Flag["Mexico"] = "mx";
+        Flag["MarshallIslands"] = "mh";
+        Flag["NorthMacedonia"] = "mk";
+        Flag["Mali"] = "ml";
+        Flag["Malta"] = "mt";
+        Flag["Myanmar"] = "mm";
+        Flag["Montenegro"] = "me";
+        Flag["Mongolia"] = "mn";
+        Flag["Mozambique"] = "mz";
+        Flag["Mauritania"] = "mr";
+        Flag["Mauritius"] = "mu";
+        Flag["Malawi"] = "mw";
+        Flag["Malaysia"] = "my";
+        Flag["Namibia"] = "na";
+        Flag["Niger"] = "ne";
+        Flag["Nigeria"] = "ng";
+        Flag["Nicaragua"] = "ni";
+        Flag["Netherlands"] = "nl";
+        Flag["Norway"] = "no";
+        Flag["Nepal"] = "np";
+        Flag["Nauru"] = "nr";
+        Flag["NewZealand"] = "nz";
+        Flag["Oman"] = "om";
+        Flag["Pakistan"] = "pk";
+        Flag["Panama"] = "pa";
+        Flag["Peru"] = "pe";
+        Flag["Philippines"] = "ph";
+        Flag["Palau"] = "pw";
+        Flag["PapuaNewGuinea"] = "pg";
+        Flag["Poland"] = "pl";
+        Flag["FrenchPolynesia"] = "pf";
+        Flag["NorthKorea"] = "kp";
+        Flag["Portugal"] = "pt";
+        Flag["Paraguay"] = "py";
+        Flag["Qatar"] = "qa";
+        Flag["Romania"] = "ro";
+        Flag["Russia"] = "ru";
+        Flag["Rwanda"] = "rw";
+        Flag["SaudiArabia"] = "sa";
+        Flag["Sudan"] = "sd";
+        Flag["Senegal"] = "sn";
+        Flag["Singapore"] = "sg";
+        Flag["SolomonIslands"] = "sb";
+        Flag["SierraLeone"] = "sl";
+        Flag["ElSalvador"] = "sv";
+        Flag["SanMarino"] = "sm";
+        Flag["Somalia"] = "so";
+        Flag["Serbia"] = "rs";
+        Flag["SouthSudan"] = "ss";
+        Flag["SaoTomeAndPrincipe"] = "st";
+        Flag["Suriname"] = "sr";
+        Flag["Slovakia"] = "sk";
+        Flag["Slovenia"] = "si";
+        Flag["Sweden"] = "se";
+        Flag["Eswatini"] = "sz";
+        Flag["Seychelles"] = "sc";
+        Flag["Syria"] = "sy";
+        Flag["Chad"] = "td";
+        Flag["Togo"] = "tg";
+        Flag["Thailand"] = "th";
+        Flag["Tajikistan"] = "tj";
+        Flag["Turkmenistan"] = "tm";
+        Flag["TimorLeste"] = "tl";
+        Flag["Tonga"] = "to";
+        Flag["TrinidadAndTobago"] = "tt";
+        Flag["Tunisia"] = "tn";
+        Flag["Turkey"] = "tr";
+        Flag["Tuvalu"] = "tv";
+        Flag["Tanzania"] = "tz";
+        Flag["Uganda"] = "ug";
+        Flag["Ukraine"] = "ua";
+        Flag["Uruguay"] = "uy";
+        Flag["UnitedStates"] = "us";
+        Flag["Uzbekistan"] = "uz";
+        Flag["VaticanCity"] = "va";
+        Flag["SaintVincentAndTheGrenadines"] = "vc";
+        Flag["Venezuela"] = "ve";
+        Flag["Vietnam"] = "vn";
+        Flag["Vanuatu"] = "vu";
+        Flag["Samoa"] = "ws";
+        Flag["Yemen"] = "ye";
+        Flag["SouthAfrica"] = "za";
+        Flag["Zambia"] = "zm";
+        Flag["Zimbabwe"] = "zw";
+    })(exports.Flag || (exports.Flag = {}));
+
+    exports.ExecutionMethod = void 0;
+    (function (ExecutionMethod) {
+        ExecutionMethod["GET"] = "GET";
+        ExecutionMethod["POST"] = "POST";
+        ExecutionMethod["PUT"] = "PUT";
+        ExecutionMethod["PATCH"] = "PATCH";
+        ExecutionMethod["DELETE"] = "DELETE";
+        ExecutionMethod["OPTIONS"] = "OPTIONS";
+        ExecutionMethod["HEAD"] = "HEAD";
+    })(exports.ExecutionMethod || (exports.ExecutionMethod = {}));
+
+    exports.ImageGravity = void 0;
+    (function (ImageGravity) {
+        ImageGravity["Center"] = "center";
+        ImageGravity["Topleft"] = "top-left";
+        ImageGravity["Top"] = "top";
+        ImageGravity["Topright"] = "top-right";
+        ImageGravity["Left"] = "left";
+        ImageGravity["Right"] = "right";
+        ImageGravity["Bottomleft"] = "bottom-left";
+        ImageGravity["Bottom"] = "bottom";
+        ImageGravity["Bottomright"] = "bottom-right";
+    })(exports.ImageGravity || (exports.ImageGravity = {}));
+
+    exports.ImageFormat = void 0;
+    (function (ImageFormat) {
+        ImageFormat["Jpg"] = "jpg";
+        ImageFormat["Jpeg"] = "jpeg";
+        ImageFormat["Png"] = "png";
+        ImageFormat["Webp"] = "webp";
+        ImageFormat["Heic"] = "heic";
+        ImageFormat["Avif"] = "avif";
+        ImageFormat["Gif"] = "gif";
+    })(exports.ImageFormat || (exports.ImageFormat = {}));
+
+    exports.Account = Account;
+    exports.AppwriteException = AppwriteException;
+    exports.Avatars = Avatars;
+    exports.Client = Client;
+    exports.Databases = Databases;
+    exports.Functions = Functions;
+    exports.Graphql = Graphql;
+    exports.ID = ID;
+    exports.Locale = Locale;
+    exports.Messaging = Messaging;
+    exports.Permission = Permission;
+    exports.Query = Query;
+    exports.Role = Role;
+    exports.Storage = Storage;
+    exports.TablesDB = TablesDB;
+    exports.Teams = Teams;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
+
+})(this.Appwrite = this.Appwrite || {});
+
+;(()=>{
 'use strict';
 const $=id=>document.getElementById(id), categories=['未分類','あいさつ','リアクション','笑い声','その他'];
 let published=false;
@@ -11,7 +4926,7 @@ function setTitle(title){$('title').textContent=title;document.querySelector('.b
 function available(c){return Boolean(c.blob||c.src)}
 function renderFilters(){const el=$('filters');el.replaceChildren();['すべて','お気に入り',...categories].forEach(name=>{const b=document.createElement('button');b.textContent=name==='お気に入り'?'☆ お気に入り':name;b.className=name===filter?'active':'';b.setAttribute('aria-pressed',name===filter);b.onclick=()=>{filter=name;renderFilters();render()};el.append(b)})}
 function visible(){const q=$('search').value.trim().toLocaleLowerCase();return clips.filter(c=>(filter==='すべて'||filter==='お気に入り'&&c.favorite||filter===c.category)&&(!q||c.label.toLocaleLowerCase().includes(q)||c.category.includes(q)))}
-function render(){const grid=$('grid');grid.replaceChildren();$('ready').textContent=clips.filter(available).length;$('count').textContent=clips.length;const list=visible();$('resultcount').textContent=list.length+' 個のボイス';$('empty').hidden=list.length>0;list.forEach(c=>{const card=document.createElement('article');card.className='card'+(c.id===playing?' playing':'');const play=document.createElement('button');play.className='play';play.setAttribute('aria-label',c.label+'を再生');const top=document.createElement('span');top.className='card-top';const n=document.createElement('span');n.textContent='VOICE '+String(clips.indexOf(c)+1).padStart(2,'0');const icon=document.createElement('span');icon.className='playicon';icon.textContent=c.id===playing?'Ⅱ':'▶';top.append(n,icon);const label=document.createElement('strong');label.textContent=c.label;play.append(top,label);play.onclick=()=>playClip(c);const bottom=document.createElement('div');bottom.className='card-bottom';const tag=document.createElement('span');tag.className='tag';tag.textContent=available(c)?c.category:'音声未登録';const actions=document.createElement('div');actions.className='actions';const fav=document.createElement('button');fav.className='fav'+(c.favorite?' selected':'');fav.textContent=c.favorite?'★':'☆';fav.setAttribute('aria-label',c.favorite?'お気に入りから外す':'お気に入りに追加');fav.setAttribute('aria-pressed',Boolean(c.favorite));fav.onclick=async()=>{const updated={...c,favorite:!c.favorite};try{if(published){Object.assign(c,updated);try{localStorage.setItem('akira-shared-favorites',JSON.stringify(clips.filter(x=>x.favorite).map(x=>x.id)))}catch{}}else{await save(updated);Object.assign(c,updated)}render()}catch{toast('保存できませんでした。ブラウザの空き容量をご確認ください。')}};const edit=document.createElement('button');edit.textContent='編集';edit.setAttribute('aria-label',c.label+'を編集');edit.onclick=()=>openEdit(c);actions.append(fav);if(!published)actions.append(edit);bottom.append(tag,actions);card.append(play,bottom);grid.append(card)})}
+function render(){const grid=$('grid');grid.replaceChildren();$('ready').textContent=clips.filter(available).length;$('count').textContent=clips.length;const list=visible();$('resultcount').textContent=list.length+' 個のボイス';$('empty').hidden=list.length>0;list.forEach(c=>{const card=document.createElement('article');card.className='card'+(c.id===playing?' playing':'');const play=document.createElement('button');play.className='play';play.setAttribute('aria-label',c.label+'を再生');const top=document.createElement('span');top.className='card-top';const n=document.createElement('span');n.textContent='VOICE '+String(clips.indexOf(c)+1).padStart(2,'0');const icon=document.createElement('span');icon.className='playicon';icon.textContent=c.id===playing?'Ⅱ':'▶';top.append(n,icon);const label=document.createElement('strong');label.textContent=c.label;play.append(top,label);play.onclick=()=>playClip(c);const bottom=document.createElement('div');bottom.className='card-bottom';const tag=document.createElement('span');tag.className='tag';tag.textContent=available(c)?c.category:'音声未登録';const actions=document.createElement('div');actions.className='actions';const fav=document.createElement('button');fav.className='fav'+(c.favorite?' selected':'');fav.textContent=c.favorite?'★':'☆';fav.setAttribute('aria-label',c.favorite?'お気に入りから外す':'お気に入りに追加');fav.setAttribute('aria-pressed',Boolean(c.favorite));fav.onclick=async()=>{const updated={...c,favorite:!c.favorite};try{if(true){favorites=clips.filter(x=>x.id!==c.id&&x.favorite).map(x=>x.id);if(updated.favorite)favorites.push(c.id);Object.assign(c,updated);try{localStorage.setItem('akira-shared-favorites',JSON.stringify(clips.filter(x=>x.favorite).map(x=>x.id)))}catch{}}else{await save(updated);Object.assign(c,updated)}render()}catch{toast('保存できませんでした。ブラウザの空き容量をご確認ください。')}};const edit=document.createElement('button');edit.textContent='編集';edit.setAttribute('aria-label',c.label+'を編集');edit.onclick=()=>openEdit(c);actions.append(fav);if(!published)actions.append(edit);bottom.append(tag,actions);card.append(play,bottom);grid.append(card)})}
 function stop(){audio.pause();audio.removeAttribute('src');audio.load();if(objectURL){URL.revokeObjectURL(objectURL);objectURL=null}playing=null;$('progress').value=0;$('playerstatus').textContent='READY TO PLAY';$('now').textContent='ボタンを押して再生';render()}
 async function playClip(c){if(!available(c)){toast('このボイスは音声未登録です。「編集」から音声を選んでください。');return}if(playing===c.id){stop();return}stop();playing=c.id;audio.src=c.blob?(objectURL=URL.createObjectURL(c.blob)):c.src;$('now').textContent=c.label;$('playerstatus').textContent='NOW PLAYING';render();try{await audio.play()}catch{stop();toast('音声を再生できませんでした。別の音声ファイルをお試しください。')}}
 audio.ontimeupdate=()=>{$('progress').value=Number.isFinite(audio.duration)&&audio.duration>0?audio.currentTime/audio.duration:0};audio.onended=stop;
@@ -22,42 +4937,44 @@ $('remove').onclick=async()=>{const c=clips.find(x=>x.id===editing);if(!confirm(
 $('settings').onclick=async()=>{const title=prompt('サイト名を入力してください',document.title);if(!title?.trim())return;try{await request('settings','readwrite',s=>s.put(title.trim().slice(0,60),'title'));setTitle(title.trim().slice(0,60));toast('このブラウザのサイト名を変更しました')}catch{toast('保存できませんでした')}};
 $('add').onclick=()=>$('bulk').click();$('bulk').onchange=async()=>{const files=Array.from($('bulk').files);let count=0;for(const file of files){if(!file.type.startsWith('audio/')&&!/\.(mp3|m4a|wav|ogg|aac|flac|opus|webm)$/i.test(file.name))continue;const slot=clips.find(c=>!available(c));const c={...(slot||{id:crypto.randomUUID(),category:'未分類',favorite:false}),label:file.name.replace(/\.[^.]+$/,''),blob:file,filename:file.name};try{await save(c);if(slot)Object.assign(slot,c);else clips.push(c);count++}catch{toast('保存容量が足りないか、ブラウザで保存が制限されています。');break}}render();$('bulk').value='';if(count)toast(count+' 個の音声を追加しました');else toast('音声ファイルを選んでください')};
 $('search').oninput=render;$('stop').onclick=stop;$('volume').oninput=()=>{audio.volume=Number($('volume').value)/100;$('volnum').textContent=$('volume').value+'%'};$('random').onclick=()=>{const list=visible().filter(available);if(!list.length){toast('まず音声ファイルを追加してください。');return}const pool=list.filter(c=>c.id!==playing);playClip((pool.length?pool:list)[Math.floor(Math.random()*(pool.length||list.length))])};
-// ZIP writer: uncompressed entries, UTF-8 filenames, with CRC-32.
-function makeZip(entries){
- const encoder=new TextEncoder(), parts=[], central=[];let offset=0;
- function header(size){const bytes=new Uint8Array(size);return {bytes,view:new DataView(bytes.buffer)}}
- const table=Array.from({length:256},(_,n)=>{let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;return c>>>0});
- for(const entry of entries){const name=encoder.encode(entry.name),data=entry.data instanceof Uint8Array?entry.data:encoder.encode(entry.data);let crc=0xffffffff;for(const b of data)crc=table[(crc^b)&255]^(crc>>>8);crc=(crc^0xffffffff)>>>0;
- const local=header(30);local.view.setUint32(0,0x04034b50,true);local.view.setUint16(4,20,true);local.view.setUint16(6,0x800,true);local.view.setUint32(14,crc,true);local.view.setUint32(18,data.length,true);local.view.setUint32(22,data.length,true);local.view.setUint16(26,name.length,true);parts.push(local.bytes,name,data);
- const c=header(46);c.view.setUint32(0,0x02014b50,true);c.view.setUint16(4,20,true);c.view.setUint16(6,20,true);c.view.setUint16(8,0x800,true);c.view.setUint32(16,crc,true);c.view.setUint32(20,data.length,true);c.view.setUint32(24,data.length,true);c.view.setUint16(28,name.length,true);c.view.setUint32(42,offset,true);central.push(c.bytes,name);offset+=30+name.length+data.length;
- }
- const centralSize=central.reduce((sum,p)=>sum+p.length,0),end=header(22);end.view.setUint32(0,0x06054b50,true);end.view.setUint16(8,entries.length,true);end.view.setUint16(10,entries.length,true);end.view.setUint32(12,centralSize,true);end.view.setUint32(16,offset,true);return new Blob([...parts,...central,end.bytes],{type:'application/zip'});
-}
-async function fetchBytes(path){const r=await fetch(path,{cache:'no-store'});if(!r.ok)throw new Error('ファイルを取得できません：'+path);return new Uint8Array(await r.arrayBuffer())}
-function enableSharedExport(){
- const b=document.createElement('button');b.className='primary';b.textContent='共有用サイトを保存';b.id='exportShared';b.style.marginLeft='8px';$('add').after(b);
- const notice=$('notice');notice.replaceChildren();notice.append('音声や名前を編集したら「共有用サイトを保存」を押し、保存されたZIPの中身をGitHubにアップロードしてください。');const small=document.createElement('small');small.textContent='編集中の音声はこのブラウザに保存されます。GitHubにアップロードして初めて他の人にも反映されます。登録済みの音声はそのまま書き出せます。';notice.append(small);
- b.onclick=async()=>{const ready=clips.filter(available);if(!ready.length){toast('共有する音声を先に追加してください。');return}b.disabled=true;b.textContent='保存用ファイルを準備中…';
- try{
- const entries=[];for(const name of ['index.html','style.css','app.js'])entries.push({name,data:await fetchBytes(name)});
- const exported=[];for(let i=0;i<clips.length;i++){const c=clips[i],record={id:c.id,label:c.label,category:c.category,order:i,favorite:false};if(available(c)){const file=c.filename||c.src||'voice.mp3';const ext=(file.match(/\.(mp3|m4a|wav|ogg|aac|flac|opus|webm)(?:\?.*)?$/i)||[])[1]||({ 'audio/mpeg':'mp3','audio/mp4':'m4a','audio/wav':'wav','audio/ogg':'ogg','audio/webm':'webm'}[c.blob?.type]||'mp3');const name='sounds/'+String(i+1).padStart(3,'0')+'.'+ext.toLowerCase();const data=c.blob?new Uint8Array(await c.blob.arrayBuffer()):await fetchBytes(c.src);if(data.length>25*1024*1024)throw Error('25MBを超える音声があります。短く分割してから保存してください。');entries.push({name,data});record.src=name;record.filename=file}exported.push(record)}
- entries.push({name:'voices.json',data:JSON.stringify({published:true,title:document.title,clips:exported},null,2)},{name:'.nojekyll',data:''},{name:'公開手順.txt',data:'ZIPをファイルアプリで展開し、中のindex.html、style.css、app.js、voices.jsonとsoundsフォルダ内の音声を同じGitHubリポジトリにアップロードしてください。soundsはリポジトリ直下に置きます。Commit changes後、公開が完了すると全員に同じ音声とボタン名が表示されます。公開手順.txtはアップロード不要です。コードと音声は公開されます。'});
- const blob=makeZip(entries);const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='akira-button-shared.zip';a.textContent='共有用ZIPをダウンロード';a.style.display='block';a.style.marginTop='10px';a.className='quiet';notice.querySelector('a')?.remove();notice.append(a);a.click();setTimeout(()=>URL.revokeObjectURL(url),30*60*1000);toast('ZIPを保存し、展開した中身をGitHubへアップロードしてください。');
- }catch(e){toast('保存できませんでした：'+e.message)}finally{b.disabled=false;b.textContent='共有用サイトを保存'}
- };
-}
-(async()=>{
- try{
- const response=await fetch('voices.json',{cache:'no-store'});if(!response.ok)throw Error('voices.jsonを取得できません');const manifest=await response.json();
- if(manifest.published){
-  published=true;clips=manifest.clips.map(c=>({...c}));if(manifest.title)setTitle(manifest.title);
-  try{const favorites=JSON.parse(localStorage.getItem('akira-shared-favorites')||'[]');clips.forEach(c=>c.favorite=favorites.includes(c.id))}catch{}
-  $('add').hidden=true;$('settings').hidden=true;const info=$('notice');info.textContent='ボタンを押すと音声が再生されます。お気に入りはこのブラウザに保存されます。';
-  // Viewer favorites must never overwrite the creator's stored audio.
-  renderFilters();render();return;
- }
- db=await openDB();clips=await request('clips','readonly',s=>s.getAll());const initialized=await request('settings','readonly',s=>s.get('initialized'));
- if(!initialized){for(const c of manifest){await save(c);clips.push(c)}await request('settings','readwrite',s=>s.put(true,'initialized'))}
- clips.sort((a,b)=>(a.order??Infinity)-(b.order??Infinity));const title=await request('settings','readonly',s=>s.get('title'));if(title)setTitle(title);renderFilters();render();enableSharedExport();
- }catch(e){toast('読み込みできませんでした。ページを再読み込みしてください。');$('notice').textContent='読み込みエラー：'+e.message;$('add').disabled=true;$('settings').disabled=true}
+
+// Shared voice collection. Public IDs only; authorization is enforced by Appwrite.
+const CONFIG={endpoint:'https://fra.cloud.appwrite.io/v1',project:'6acbb68d00290e12d678',database:'6acbbb3e002d2ee430c4',table:'6acbbb75001e29c575ab',bucket:'6acbb8720004e2c3ea4a',team:'6acbb9ff003292ecc960'};
+const client=new Appwrite.Client().setEndpoint(CONFIG.endpoint).setProject(CONFIG.project);
+const account=new Appwrite.Account(client),tables=new Appwrite.TablesDB(client),storage=new Appwrite.Storage(client),teams=new Appwrite.Teams(client);
+const base={databaseId:CONFIG.database,tableId:CONFIG.table};
+let canEdit=false,currentUser=null,cloudRows=[],busy=false,refreshing=false,editSnapshot=null,unsubscribe=null,refreshTimer;
+let favorites=[];try{favorites=JSON.parse(localStorage.getItem('akira-shared-favorites')||'[]')}catch{}
+function errorText(e){if(e.code===401||e.code===403)return 'ログイン状態と編集チームへの登録を確認してください。';if(e.code===409)return '同じボタンが先に保存されました。内容を読み直してから編集してください。';return e.message||'通信できませんでした。接続を確認して再度お試しください。'}
+function button(text,fn){const b=document.createElement('button');b.className='quiet';b.textContent=text;b.onclick=fn;return b}
+const authButton=button('編集者ログイン',()=>authDialog.showModal());$('settings').before(authButton);
+const syncButton=button('↻ 最新に更新',()=>refresh().catch(e=>toast(errorText(e))));$('random').before(syncButton);
+const migrateButton=button('この端末の音声を共有保存へ移す',migrateLegacy);$('add').after(migrateButton);migrateButton.hidden=true;
+const authDialog=document.createElement('dialog');
+authDialog.innerHTML='<form id="cloudLogin"><div class="modal-head"><h2>編集者ログイン</h2><button type="button" id="authClose" class="quiet">✕</button></div><p>編集用に登録したメールアドレスとパスワードを入力してください。</p><label>メールアドレス<input id="authEmail" type="email" autocomplete="username" required></label><label>パスワード<input id="authPassword" type="password" autocomplete="current-password" minlength="8" required></label><p id="authError" role="alert"></p><div class="modal-actions"><button type="button" id="authRegister" class="quiet">新しく編集用アカウントを作る</button><button class="primary" id="authSubmit">ログイン</button></div></form>';
+document.body.append(authDialog);$('authClose').onclick=()=>authDialog.close();
+const orderLabel=document.createElement('label');orderLabel.textContent='並び順';const orderInput=document.createElement('input');orderInput.id='cloudOrder';orderInput.type='number';orderInput.min='0';orderInput.max='2147483647';orderInput.step='1';orderLabel.append(orderInput);$('category').parentElement.after(orderLabel);
+function updateAuthUI(){published=!canEdit;$('add').hidden=!canEdit;$('settings').hidden=!canEdit;migrateButton.hidden=!canEdit;authButton.textContent=currentUser?'ログアウト':'編集者ログイン';authButton.onclick=currentUser?logout:()=>authDialog.showModal();$('notice').textContent=canEdit?'編集モード：保存すると公開ページにも反映されます。同じボタンを同時に編集するときは、担当を分けてください。':currentUser?'ログイン済みですが編集チームへの登録待ちです。管理者に追加してもらってから「最新に更新」を押してください。':'ボタンを押すと音声が再生されます。お気に入りはこのブラウザだけに保存されます。';render()}
+async function checkAuth(){currentUser=null;canEdit=false;try{currentUser=await account.get();const result=await teams.list({queries:[Appwrite.Query.equal('$id',[CONFIG.team])]});canEdit=result.teams.some(t=>t.$id===CONFIG.team)}catch(e){if(currentUser)toast(errorText(e))}updateAuthUI()}
+$('cloudLogin').onsubmit=async e=>{e.preventDefault();$('authSubmit').disabled=true;$('authError').textContent='';try{await account.createEmailPasswordSession({email:$('authEmail').value.trim(),password:$('authPassword').value});$('authPassword').value='';await checkAuth();await refresh();startRealtime();authDialog.close();toast(canEdit?'編集できるようになりました。':'編集チームへの登録待ちです。')}catch(e){$('authError').textContent=errorText(e)}finally{$('authSubmit').disabled=false}};
+$('authRegister').onclick=async()=>{const form=$('cloudLogin');if(!form.reportValidity())return;if(!confirm('このメールアドレスで編集用アカウントを作りますか？作成後、管理者によるチームへの追加が必要です。'))return;$('authRegister').disabled=true;try{await account.create({userId:Appwrite.ID.unique(),email:$('authEmail').value.trim(),password:$('authPassword').value});toast('作成しました。「ログイン」を押してください。')}catch(e){$('authError').textContent=errorText(e)}finally{$('authRegister').disabled=false}};
+async function logout(){try{await account.deleteSession({sessionId:'current'});currentUser=null;canEdit=false;$('editor').close();updateAuthUI();startRealtime()}catch(e){toast(errorText(e))}}
+function rowClip(r){return {id:r.$id,label:r.label,category:r.category,order:r.sortOrder??0,fileId:r.fileId,src:r.fileId?String(storage.getFileView({bucketId:CONFIG.bucket,fileId:r.fileId})):undefined,favorite:favorites.includes(r.$id),cloud:true,updatedAt:r.$updatedAt}}
+function combineRows(rows){const title=rows.find(r=>r.$id==='site-title');if(title)setTitle(title.label);const result=rows.filter(r=>r.$id!=='site-title').map(rowClip);const used=new Set(result.map(c=>c.order));for(let i=0;i<100;i++){const id='slot-'+String(i+1).padStart(3,'0');if(!used.has(i)&&!result.some(c=>c.id===id))result.push({id,label:'ボイス '+String(i+1).padStart(2,'0'),category:'未分類',order:i,favorite:favorites.includes(id),cloud:false})}return result.sort((a,b)=>a.order-b.order||a.id.localeCompare(b.id))}
+async function refresh(){if(refreshing||busy)return;refreshing=true;try{const rows=[];let cursor;do{const queries=[Appwrite.Query.limit(100)];if(cursor)queries.push(Appwrite.Query.cursorAfter(cursor));const page=await tables.listRows({...base,queries});rows.push(...page.rows);cursor=page.rows.length===100?page.rows.at(-1).$id:null}while(cursor);cloudRows=rows;clips=combineRows(rows);renderFilters();render();if(currentUser&&!canEdit)await checkAuth()}finally{refreshing=false}}
+function startRealtime(){unsubscribe?.();try{unsubscribe=client.subscribe('tablesdb.'+CONFIG.database+'.tables.'+CONFIG.table+'.rows',()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refresh().catch(()=>{}),200)})}catch{} }
+const oldOpenEdit=openEdit;openEdit=function(c){if(!canEdit)return;editSnapshot={...c};oldOpenEdit(c);orderInput.value=c.order??0;$('remove').textContent='この音声を削除';$('filename').textContent=c.fileId?'共有保存済みの音声があります':'音声未登録'};
+function validateFile(file){if(!file.type.startsWith('audio/')&&!/\.(mp3|m4a|wav|ogg|aac|flac|opus|webm)$/i.test(file.name))throw Error('音声ファイルを選んでください。');if(file.size>25*1024*1024)throw Error('音声は1個25MB以下にしてください。');if(!file.size)throw Error('空の音声ファイルは保存できません。')}
+async function assertUnchanged(c){try{const row=await tables.getRow({...base,rowId:c.id});if(!c.cloud||row.$updatedAt!==c.updatedAt)throw Error('他の編集者がこのボタンを更新しました。編集画面を閉じて「最新に更新」を押してください。')}catch(e){if(e.code===404&&!c.cloud)return;throw e}}
+async function persistClip(c,file){if(!canEdit)throw Error('編集者ログインが必要です。');await assertUnchanged(c);let fileId=c.fileId||'',uploaded=null;try{if(file){validateFile(file);uploaded=await storage.createFile({bucketId:CONFIG.bucket,fileId:Appwrite.ID.unique(),file,permissions:[]});fileId=uploaded.$id;await assertUnchanged(c)}const data={label:c.label,category:c.category,fileId,sortOrder:c.order??0};const row=c.cloud?await tables.updateRow({...base,rowId:c.id,data}):await tables.createRow({...base,rowId:c.id,data,permissions:[]});return rowClip(row)}catch(e){if(uploaded)try{await storage.deleteFile({bucketId:CONFIG.bucket,fileId:uploaded.$id})}catch{}throw e}}
+function setBusy(value){busy=value;for(const el of $('editform').querySelectorAll('button,input,select'))el.disabled=value;$('add').disabled=value;migrateButton.disabled=value}
+$('editform').onsubmit=async e=>{e.preventDefault();if(busy||!canEdit)return;const c=editSnapshot;if(!c)return;const label=$('label').value.trim(),order=Number(orderInput.value);if(!label){toast('ボタンの名前を入力してください。');return}if(!Number.isInteger(order)||order<0||order>2147483647){toast('並び順は0以上の整数で入力してください。');return}setBusy(true);try{await persistClip({...c,label,category:$('category').value,order},$('file').files[0]);if(playing===c.id)stop();$('editor').close();toast('共有保存しました。公開ページにも反映されます。')}catch(e){toast(errorText(e))}finally{setBusy(false);await refresh().catch(e=>toast(errorText(e)))}};
+$('remove').onclick=async()=>{if(busy||!canEdit||!editSnapshot)return;const c=editSnapshot;if(!c.cloud){$('editor').close();return}if(!confirm('「'+c.label+'」の公開音声を削除しますか？'))return;setBusy(true);try{await assertUnchanged(c);await tables.deleteRow({...base,rowId:c.id});if(playing===c.id)stop();$('editor').close();toast('公開音声を削除しました。')}catch(e){toast(errorText(e))}finally{setBusy(false);await refresh().catch(()=>{})}};
+$('bulk').onchange=async()=>{if(busy||!canEdit)return;const files=Array.from($('bulk').files);setBusy(true);let count=0;try{for(const file of files){validateFile(file);const slot=clips.find(c=>!available(c));const c={...(slot||{id:Appwrite.ID.unique(),order:Math.max(99,...clips.map(c=>c.order??0))+1,cloud:false}),category:'未分類',label:file.name.replace(/\.[^.]+$/,'').slice(0,80)};const saved=await persistClip(c,file);if(slot)Object.assign(slot,saved);else clips.push(saved);count++;render()}}catch(e){toast(count+'個保存済み。残りは保存できませんでした：'+errorText(e))}finally{setBusy(false);$('bulk').value='';await refresh().catch(()=>{});if(count===files.length&&count)toast(count+'個の音声を共有保存しました。')}};
+$('settings').onclick=async()=>{if(!canEdit||busy)return;const title=prompt('公開するサイト名',document.title)?.trim().slice(0,60);if(!title)return;setBusy(true);try{const existing=cloudRows.find(r=>r.$id==='site-title');const c=existing?rowClip(existing):{id:'site-title',cloud:false};await persistClip({...c,label:title,category:'__settings__',order:0});setTitle(title);toast('サイト名を共有保存しました。')}catch(e){toast(errorText(e))}finally{setBusy(false);await refresh().catch(()=>{})}};
+async function migrateLegacy(){if(!canEdit||busy)return;if(!confirm('このブラウザに登録した音声と、以前公開した音声を共有保存へ移します。移した音声は全員に公開されます。続けますか？'))return;setBusy(true);let count=0;try{db=await openDB();const local=await request('clips','readonly',s=>s.getAll());let manifest=[];try{const r=await fetch('voices.json',{cache:'no-store'});if(r.ok){const m=await r.json();manifest=Array.isArray(m)?m:m.clips||[]}}catch{}const candidates=new Map();for(const c of [...manifest,...local])if(available(c))candidates.set(c.id,c);for(const original of candidates.values()){const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(original.id))))).slice(0,12).map(n=>n.toString(16).padStart(2,'0')).join('');const id='legacy-'+hash;if(cloudRows.some(r=>r.$id===id))continue;let file=original.blob;if(!file){const r=await fetch(original.src);if(!r.ok)throw Error('以前の音声を取得できません。');file=new File([await r.blob()],original.filename||original.src.split('/').pop()||'voice.mp3')}if(!(file instanceof File))file=new File([file],original.filename||'voice.mp3',{type:file.type});await persistClip({id,cloud:false,label:original.label,category:original.category||'未分類',order:Number.isInteger(original.order)?original.order:count},file);count++}toast(count?count+'個の音声を共有保存へ移しました。':'移せる音声がないか、すでに移した音声です。')}catch(e){toast(count+'個移行済み：'+errorText(e))}finally{setBusy(false);await refresh().catch(()=>{})}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(()=>{})});
+setInterval(()=>{if(!document.hidden)refresh().catch(()=>{})},60000);
+(async()=>{published=true;$('add').hidden=true;$('settings').hidden=true;try{await refresh();await checkAuth();startRealtime()}catch(e){$('notice').textContent='共有データを読み込めませんでした：'+errorText(e);toast('「最新に更新」で再試行できます。')}})();
+
 })();
