@@ -1,0 +1,748 @@
+{
+  "records": [
+    {
+      "id": "legacy-4f717128495ed236e0e90e76",
+      "label": "こんばんわぁ",
+      "category": "あいさつ",
+      "order": 2,
+      "src": "library/6acd3c930012be47c56e.ogg",
+      "filename": "こんばんわぁ.ogg"
+    },
+    {
+      "id": "slot-001",
+      "label": "それ嘘ね",
+      "category": "未分類",
+      "order": 4,
+      "src": "library/6acdf64a00298443a2f9.ogg",
+      "filename": "それ嘘ね.ogg"
+    },
+    {
+      "id": "slot-002",
+      "label": "これサウンドボード",
+      "category": "未分類",
+      "order": 1,
+      "src": "library/6acdf6c4002e352391ff.ogg",
+      "filename": "これサウンドボード.ogg"
+    },
+    {
+      "id": "slot-004",
+      "label": "オタクみたいな",
+      "category": "未分類",
+      "order": 4,
+      "src": "library/6acdf504003acd3ba434.ogg",
+      "filename": "オタクみたいな.ogg"
+    },
+    {
+      "id": "slot-006",
+      "label": "ミーム",
+      "category": "その他",
+      "order": 5,
+      "src": "library/6acdf59c00303f1ba550.ogg",
+      "filename": "ミーム.ogg"
+    },
+    {
+      "id": "slot-007",
+      "label": "ミュージックミュージシャン",
+      "category": "未分類",
+      "order": 6,
+      "src": "library/6acdf6e4001fbbce4c2a.ogg",
+      "filename": "ミュージックミュージシャン.ogg"
+    },
+    {
+      "id": "slot-008",
+      "label": "ちょっと、なんで...スタンバってるんですか汗",
+      "category": "未分類",
+      "order": 7,
+      "src": "library/6acdf793003c02a7d0ca.ogg",
+      "filename": "ちょっと、なんで...スタンバってるんですか汗.ogg"
+    },
+    {
+      "id": "slot-009",
+      "label": "必要のない愛情かも",
+      "category": "未分類",
+      "order": 8,
+      "src": "library/6acdf7bc002aad90d719.ogg",
+      "filename": "必要のない愛情かも.ogg"
+    },
+    {
+      "id": "slot-010",
+      "label": "nice",
+      "category": "未分類",
+      "order": 9,
+      "src": "library/6acdf7f80005f10572c4.ogg",
+      "filename": "nice.ogg"
+    },
+    {
+      "id": "slot-011",
+      "label": "イズナさん、そっちの道に行ってはいけない",
+      "category": "未分類",
+      "order": 10,
+      "src": "library/6acdf7e000032c7858de.ogg",
+      "filename": "イズナさん、そっちの道に行ってはいけない.ogg"
+    },
+    {
+      "id": "slot-012",
+      "label": "5カウント",
+      "category": "未分類",
+      "order": 11,
+      "src": "library/6acdf8090021f6b6e84c.ogg",
+      "filename": "5カウント.ogg"
+    },
+    {
+      "id": "slot-013",
+      "label": "時報",
+      "category": "未分類",
+      "order": 12,
+      "src": "library/6acdf86a00181d6eb46d.ogg",
+      "filename": "時報.ogg"
+    },
+    {
+      "id": "slot-014",
+      "label": "ありがとうございますなのかこれ？",
+      "category": "未分類",
+      "order": 13,
+      "src": "library/6acdf89a001cbba5777d.ogg",
+      "filename": "感謝.ogg"
+    },
+    {
+      "id": "slot-015",
+      "label": "DV彼女",
+      "category": "未分類",
+      "order": 14,
+      "src": "library/6acdf88d0028eb225e55.ogg",
+      "filename": "DV彼女.ogg"
+    },
+    {
+      "id": "slot-016",
+      "label": "ちがうちがうちがうｗ",
+      "category": "未分類",
+      "order": 15,
+      "src": "library/6acdf8cd002060d1eff6.ogg",
+      "filename": "そうじゃなぁい～♪.ogg"
+    },
+    {
+      "id": "slot-017",
+      "label": "本物も混ざってる",
+      "category": "未分類",
+      "order": 16,
+      "src": "library/6acdf900000b0e84779d.ogg",
+      "filename": "混ざってる.ogg"
+    },
+    {
+      "id": "slot-018",
+      "label": "もう違う、今までの俺とは",
+      "category": "未分類",
+      "order": 17,
+      "src": "library/6ace4701000914d831eb.ogg",
+      "filename": "もう違う、今までの俺とは.ogg"
+    },
+    {
+      "id": "slot-019",
+      "label": "ナチュラルにいきましょうよ",
+      "category": "未分類",
+      "order": 18,
+      "src": "library/6ace45a800289908fac4.ogg",
+      "filename": "ナチュラル.ogg"
+    },
+    {
+      "id": "slot-020",
+      "label": "ちょっと早いな",
+      "category": "未分類",
+      "order": 19,
+      "src": "library/6acdf94b0011592a2043.ogg",
+      "filename": "ちょっと早いな.ogg"
+    },
+    {
+      "id": "slot-021",
+      "label": "誠に遺憾です",
+      "category": "未分類",
+      "order": 20,
+      "src": "library/6acdf974003495cfc538.ogg",
+      "filename": "誠に遺憾です.ogg"
+    },
+    {
+      "id": "slot-022",
+      "label": "こう言う喋り方なの俺は",
+      "category": "未分類",
+      "order": 21,
+      "src": "library/6acdf95a001f2e76f27d.ogg",
+      "filename": "こう言う喋り方なの俺は.ogg"
+    },
+    {
+      "id": "slot-023",
+      "label": "巧妙な罠やめて",
+      "category": "未分類",
+      "order": 22,
+      "src": "library/6acdf9b9002017794dd4.ogg",
+      "filename": "巧妙な罠やめて.ogg"
+    },
+    {
+      "id": "slot-024",
+      "label": "ミス",
+      "category": "未分類",
+      "order": 23,
+      "src": "library/6acdf9bb0014641e70b0.ogg",
+      "filename": "ミス.ogg"
+    },
+    {
+      "id": "slot-025",
+      "label": "ギリ舞えるかも",
+      "category": "未分類",
+      "order": 24,
+      "src": "library/6acdfa02000e89ad0407.ogg",
+      "filename": "ギリ舞えるかも.ogg"
+    },
+    {
+      "id": "slot-026",
+      "label": "スキがないねぇ",
+      "category": "未分類",
+      "order": 25,
+      "src": "library/6acdf9eb00196f773611.ogg",
+      "filename": "スキがないねぇ.ogg"
+    },
+    {
+      "id": "slot-027",
+      "label": "かいかい",
+      "category": "未分類",
+      "order": 26,
+      "src": "library/6acdfa2500331f8162af.ogg",
+      "filename": "かいかい.ogg"
+    },
+    {
+      "id": "slot-028",
+      "label": "ぶりぶり",
+      "category": "未分類",
+      "order": 27,
+      "src": "library/6acdfa0a003bbfeef325.ogg",
+      "filename": "ぶりぶり.ogg"
+    },
+    {
+      "id": "slot-029",
+      "label": "事実ではある",
+      "category": "未分類",
+      "order": 28,
+      "src": "library/6acdfa5e003472c4c9ef.ogg",
+      "filename": "事実ではある.ogg"
+    },
+    {
+      "id": "slot-030",
+      "label": "管理能力が欠如",
+      "category": "未分類",
+      "order": 29,
+      "src": "library/6ace4486001e667738b2.ogg",
+      "filename": "管理能力が欠如してそう.ogg"
+    },
+    {
+      "id": "slot-031",
+      "label": "ちがうよ",
+      "category": "未分類",
+      "order": 30,
+      "src": "library/6acdfa8a00093bf9446b.ogg",
+      "filename": "ちがうよ.ogg"
+    },
+    {
+      "id": "slot-032",
+      "label": "結構パンパン？",
+      "category": "未分類",
+      "order": 31,
+      "src": "library/6acdfab300056f812a63.ogg",
+      "filename": "パンパン？.ogg"
+    },
+    {
+      "id": "slot-033",
+      "label": "あつい（常温",
+      "category": "未分類",
+      "order": 32,
+      "src": "library/6acdfab0002e09cbcb58.ogg",
+      "filename": "あつい（常温.ogg"
+    },
+    {
+      "id": "slot-034",
+      "label": "滑らした...足を",
+      "category": "未分類",
+      "order": 33,
+      "src": "library/6acdfafc003d88f23fa9.ogg",
+      "filename": "滑らした...足を.ogg"
+    },
+    {
+      "id": "slot-035",
+      "label": "金イマジン",
+      "category": "未分類",
+      "order": 34,
+      "src": "library/6acdfb3d0013916aed67.ogg",
+      "filename": "金イマジン.ogg"
+    },
+    {
+      "id": "slot-036",
+      "label": "俺がゼロ",
+      "category": "未分類",
+      "order": 35,
+      "src": "library/6acdfb250033887e51a5.ogg",
+      "filename": "俺がゼロ.ogg"
+    },
+    {
+      "id": "slot-037",
+      "label": "強いかも俺",
+      "category": "未分類",
+      "order": 36,
+      "src": "library/6acdfb54000cf89ae2dc.ogg",
+      "filename": "強いかも俺.ogg"
+    },
+    {
+      "id": "slot-038",
+      "label": "忘れてたっす",
+      "category": "未分類",
+      "order": 37,
+      "src": "library/6acdfc20001e9630f95c.ogg",
+      "filename": "忘れてたっす.ogg"
+    },
+    {
+      "id": "slot-039",
+      "label": "おいで",
+      "category": "未分類",
+      "order": 38,
+      "src": "library/6acdfc6e000b8f5ea2a1.ogg",
+      "filename": "おいで.ogg"
+    },
+    {
+      "id": "slot-040",
+      "label": "結構早い",
+      "category": "未分類",
+      "order": 39,
+      "src": "library/6acdfe2700143de30b68.ogg",
+      "filename": "結構早い.ogg"
+    },
+    {
+      "id": "slot-041",
+      "label": "やったーマウント",
+      "category": "未分類",
+      "order": 40,
+      "src": "library/6acdfe8d003bc16c91cb.ogg",
+      "filename": "やったーマウント.ogg"
+    },
+    {
+      "id": "slot-042",
+      "label": "その手には乗らない",
+      "category": "未分類",
+      "order": 41,
+      "src": "library/6acdfef2003e4214694d.ogg",
+      "filename": "その手には乗らない.ogg"
+    },
+    {
+      "id": "slot-043",
+      "label": "ゼロ",
+      "category": "未分類",
+      "order": 42,
+      "src": "library/6acdff4e000962836829.ogg",
+      "filename": "ゼロ.ogg"
+    },
+    {
+      "id": "slot-044",
+      "label": "ハメられてる！",
+      "category": "未分類",
+      "order": 43,
+      "src": "library/6ace007a0030acc51fa6.ogg",
+      "filename": "ハメられてる！.ogg"
+    },
+    {
+      "id": "slot-045",
+      "label": "お腹いっぱい",
+      "category": "未分類",
+      "order": 44,
+      "src": "library/6ace00f60034b3a74201.ogg",
+      "filename": "お腹いっぱい.ogg"
+    },
+    {
+      "id": "slot-046",
+      "label": "俺であって俺じゃない",
+      "category": "未分類",
+      "order": 45,
+      "src": "library/6ace014b0024b4d1d1ab.ogg",
+      "filename": "俺であって俺じゃない.ogg"
+    },
+    {
+      "id": "slot-047",
+      "label": "すんごい、くそ強いPTだった",
+      "category": "未分類",
+      "order": 46,
+      "src": "library/6ace0201002365d533b3.ogg",
+      "filename": "すんごい、くそ強いPTだった.ogg"
+    },
+    {
+      "id": "slot-048",
+      "label": "不思議っすね",
+      "category": "未分類",
+      "order": 47,
+      "src": "library/6ace02360031297ce91c.ogg",
+      "filename": "不思議っすね.ogg"
+    },
+    {
+      "id": "slot-049",
+      "label": "寝てください！",
+      "category": "未分類",
+      "order": 48,
+      "src": "library/6ace026b0034a68e1847.ogg",
+      "filename": "寝てください！.ogg"
+    },
+    {
+      "id": "slot-050",
+      "label": "おやすみなさい（甘",
+      "category": "あいさつ",
+      "order": 49,
+      "src": "library/6acdf5f7002f97d38ad2.ogg",
+      "filename": "1558571303840124950.ogg"
+    },
+    {
+      "id": "slot-051",
+      "label": "よし...ねます",
+      "category": "あいさつ",
+      "order": 50,
+      "src": "library/6acdf6750001648f1236.ogg",
+      "filename": "よし...ねます.ogg"
+    },
+    {
+      "id": "slot-052",
+      "label": "距離減衰",
+      "category": "未分類",
+      "order": 51,
+      "src": "library/6ace02910004da512031.ogg",
+      "filename": "距離減衰.ogg"
+    },
+    {
+      "id": "slot-053",
+      "label": "ハメたかも、おちんさんのこと",
+      "category": "未分類",
+      "order": 52,
+      "src": "library/6ace02760023b65e14d0.ogg",
+      "filename": "ハメたかも、おちんさんのこと.ogg"
+    },
+    {
+      "id": "slot-054",
+      "label": "すごいなぁ、ほんと",
+      "category": "未分類",
+      "order": 53,
+      "src": "library/6ace02b6001a4713d184.ogg",
+      "filename": "すごいなぁ、ほんと.ogg"
+    },
+    {
+      "id": "slot-055",
+      "label": "ミスは誰にでもある",
+      "category": "未分類",
+      "order": 54,
+      "src": "library/6ace02df0028a0a7ca4b.ogg",
+      "filename": "ミスは誰にでもある.ogg"
+    },
+    {
+      "id": "slot-056",
+      "label": "全部僕様ちゃんのせい",
+      "category": "未分類",
+      "order": 55,
+      "src": "library/6ace02f2002f7b6a4de8.ogg",
+      "filename": "全部僕様ちゃんのせい.ogg"
+    },
+    {
+      "id": "slot-057",
+      "label": "でも",
+      "category": "未分類",
+      "order": 56,
+      "src": "library/6ace032100008fadc71e.ogg",
+      "filename": "でも.ogg"
+    },
+    {
+      "id": "slot-058",
+      "label": "全力で僕様ちゃん殺りにいってほしい",
+      "category": "未分類",
+      "order": 57,
+      "src": "library/6ace0339002549acb9be.ogg",
+      "filename": "全力で僕様ちゃん殺りにいってほしい.ogg"
+    },
+    {
+      "id": "slot-059",
+      "label": "寝ないよ、俺は",
+      "category": "未分類",
+      "order": 58,
+      "src": "library/6ace0aba001ff8ad1c81.ogg",
+      "filename": "寝ないよ、俺は.ogg"
+    },
+    {
+      "id": "slot-060",
+      "label": "わすれてた～",
+      "category": "未分類",
+      "order": 59,
+      "src": "library/6ace03890005f0b273c3.ogg",
+      "filename": "わすれてた～.ogg"
+    },
+    {
+      "id": "slot-061",
+      "label": "どう考えても僕様ちゃんが一番",
+      "category": "未分類",
+      "order": 60,
+      "src": "library/6ace0387001642c526a8.ogg",
+      "filename": "どう考えても僕様ちゃんが一番.ogg"
+    },
+    {
+      "id": "slot-062",
+      "label": "ふてくされすいません",
+      "category": "未分類",
+      "order": 61,
+      "src": "library/6ace03fc003c0b81e866.ogg",
+      "filename": "ふてくされ.ogg"
+    },
+    {
+      "id": "slot-063",
+      "label": "強いみんな！",
+      "category": "未分類",
+      "order": 62,
+      "src": "library/6ace04610029f319dacb.ogg",
+      "filename": "強いみんな！.ogg"
+    },
+    {
+      "id": "slot-064",
+      "label": "うざいランキング",
+      "category": "未分類",
+      "order": 63,
+      "src": "library/6ace049e0003035e3f45.ogg",
+      "filename": "うざいランキング.ogg"
+    },
+    {
+      "id": "slot-065",
+      "label": "ここから減速する",
+      "category": "未分類",
+      "order": 64,
+      "src": "library/6ace04e60014ce096dea.ogg",
+      "filename": "ここから減速する.ogg"
+    },
+    {
+      "id": "slot-066",
+      "label": "フェアではなさすぎるかも",
+      "category": "未分類",
+      "order": 65,
+      "src": "library/6ace06730001a371488f.ogg",
+      "filename": "フェアではなさすぎるかも.ogg"
+    },
+    {
+      "id": "slot-067",
+      "label": "じぇあ",
+      "category": "未分類",
+      "order": 66,
+      "src": "library/6ace069d000f01f2ff93.ogg",
+      "filename": "じぇあ.ogg"
+    },
+    {
+      "id": "slot-068",
+      "label": "時報２",
+      "category": "未分類",
+      "order": 12,
+      "src": "library/6ace06e9003c4e107d23.ogg",
+      "filename": "時報２.ogg"
+    },
+    {
+      "id": "slot-069",
+      "label": "今日はベース",
+      "category": "未分類",
+      "order": 68,
+      "src": "library/6ace0783000d67ca426c.ogg",
+      "filename": "今日はベース.ogg"
+    },
+    {
+      "id": "slot-070",
+      "label": "一回Pでもいいですか",
+      "category": "未分類",
+      "order": 69,
+      "src": "library/6ace079c001d413ab718.ogg",
+      "filename": "一回Pでもいいですか.ogg"
+    },
+    {
+      "id": "slot-071",
+      "label": "チャラい",
+      "category": "未分類",
+      "order": 70,
+      "src": "library/6ace07c3003c0f14b019.ogg",
+      "filename": "チャラい.ogg"
+    },
+    {
+      "id": "slot-072",
+      "label": "アッツぅ",
+      "category": "未分類",
+      "order": 71,
+      "src": "library/6ace07ab003c19c8f0e8.ogg",
+      "filename": "アッツぅ.ogg"
+    },
+    {
+      "id": "slot-073",
+      "label": "意外と使えるかも",
+      "category": "未分類",
+      "order": 72,
+      "src": "library/6ace07e3000abbd58803.ogg",
+      "filename": "意外と使えるかも.ogg"
+    },
+    {
+      "id": "slot-074",
+      "label": "いいでしょ手を抜くのはもう！",
+      "category": "未分類",
+      "order": 73,
+      "src": "library/6ace07f1003c85779a41.ogg",
+      "filename": "いいでしょ出を抜くのはもう！.ogg"
+    },
+    {
+      "id": "slot-075",
+      "label": "おもろくないよ",
+      "category": "未分類",
+      "order": 74,
+      "src": "library/6ace084c00186c1cf406.ogg",
+      "filename": "おもしろくないよ.ogg"
+    },
+    {
+      "id": "slot-076",
+      "label": "本当に嘘",
+      "category": "未分類",
+      "order": 75,
+      "src": "library/6ace0887002829688b60.ogg",
+      "filename": "本当に嘘.ogg"
+    },
+    {
+      "id": "slot-077",
+      "label": "仲良くなれそう",
+      "category": "未分類",
+      "order": 76,
+      "src": "library/6ace08da0007002ece86.ogg",
+      "filename": "仲良くなれそう.ogg"
+    },
+    {
+      "id": "slot-078",
+      "label": "握ってるんだね",
+      "category": "未分類",
+      "order": 77,
+      "src": "library/6ace08d20012da2bc2c5.ogg",
+      "filename": "握ってるんだね.ogg"
+    },
+    {
+      "id": "slot-079",
+      "label": "顔も知らない人",
+      "category": "未分類",
+      "order": 78,
+      "src": "library/6ace08fc00032651492b.ogg",
+      "filename": "顔も知らない人.ogg"
+    },
+    {
+      "id": "slot-080",
+      "label": "早いよね、ほんとに",
+      "category": "未分類",
+      "order": 79,
+      "src": "library/6ace08f4003d5d1b4f32.ogg",
+      "filename": "早いよね、ほんとに.ogg"
+    },
+    {
+      "id": "slot-081",
+      "label": "器用だねぇ～",
+      "category": "未分類",
+      "order": 80,
+      "src": "library/6ace0917002587576a7f.ogg",
+      "filename": "器用だねぇ～.ogg"
+    },
+    {
+      "id": "slot-082",
+      "label": "マイバッドやめたかも",
+      "category": "未分類",
+      "order": 81,
+      "src": "library/6ace09120038176ed017.ogg",
+      "filename": "マイバッドやめたかも.ogg"
+    },
+    {
+      "id": "slot-083",
+      "label": "誠意をだしてます",
+      "category": "未分類",
+      "order": 82,
+      "src": "library/6ace0928001a44cd0849.ogg",
+      "filename": "誠意をだしてます.ogg"
+    },
+    {
+      "id": "slot-084",
+      "label": "おちんさんこすってるんだ",
+      "category": "未分類",
+      "order": 83,
+      "src": "library/6ace093b001be12bb240.ogg",
+      "filename": "おちんさんこすってるんだ.ogg"
+    },
+    {
+      "id": "slot-085",
+      "label": "とにかくメリ込む",
+      "category": "未分類",
+      "order": 84,
+      "src": "library/6ace094c0010fd5305e3.ogg",
+      "filename": "とにかくメリ込む.ogg"
+    },
+    {
+      "id": "slot-086",
+      "label": "そこまでしてほしいんだ",
+      "category": "未分類",
+      "order": 85,
+      "src": "library/6ace0981003d85daf037.ogg",
+      "filename": "そこまでしてほしいんだ.ogg"
+    },
+    {
+      "id": "slot-087",
+      "label": "まだ１番おちんさんが",
+      "category": "未分類",
+      "order": 86,
+      "src": "library/6ace09ac00293923cc14.ogg",
+      "filename": "まだ１番おちんさんが.ogg"
+    },
+    {
+      "id": "slot-088",
+      "label": "そうっすよね",
+      "category": "未分類",
+      "order": 87,
+      "src": "library/6ace09f50031c0df983a.ogg",
+      "filename": "そうっすよね.ogg"
+    },
+    {
+      "id": "slot-089",
+      "label": "Tier.1かも",
+      "category": "未分類",
+      "order": 88,
+      "src": "library/6ace0a22003e0f406733.ogg",
+      "filename": "Tier.1かも.ogg"
+    },
+    {
+      "id": "slot-090",
+      "label": "ジャーマンポテト",
+      "category": "未分類",
+      "order": 89,
+      "src": "library/6ace0a410013552662c9.ogg",
+      "filename": "ジャーマンポテト.ogg"
+    },
+    {
+      "id": "slot-091",
+      "label": "日本以外考えれない",
+      "category": "未分類",
+      "order": 90,
+      "src": "library/6ace0e99002d5f989c30.ogg",
+      "filename": "日本以外考えれない.ogg"
+    },
+    {
+      "id": "slot-092",
+      "label": "今まで通りね",
+      "category": "未分類",
+      "order": 17,
+      "src": "library/6ace45c100104f74984c.ogg",
+      "filename": "今まで通りね.ogg"
+    },
+    {
+      "id": "slot-093",
+      "label": "あ...でた!",
+      "category": "未分類",
+      "order": 92,
+      "src": "library/6ace48a900048ca2a44a.ogg",
+      "filename": "あ...でた.ogg"
+    },
+    {
+      "id": "slot-094",
+      "label": "え...でた？",
+      "category": "未分類",
+      "order": 93,
+      "src": "library/6ace48ba0035e503f02a.ogg",
+      "filename": "え...でた？.ogg"
+    }
+  ]
+}
